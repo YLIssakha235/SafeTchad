@@ -8,20 +8,29 @@ enum IncidentType {
 }
 
 enum IncidentStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
+  EN_COURS
+  RESOLU
+  ANNULE
+}
+
+enum Ville {
+  NDJAMENA
+}
+
+enum Quartier {
+  FARCHA
+  DIGUEL
 }
 
 model Incident {
-  id            String         @id @default(cuid())
-  title         String
-  description   String
-  type          IncidentType
-  status        IncidentStatus @default(OPEN)
-  latitude      Float?
-  longitude     Float?
-  locationLabel String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  type        IncidentType
+  status      IncidentStatus @default(EN_COURS)
+  ville       Ville
+  quartier    Quartier?
+  axeRoutier  String?        // texte libre ex: "Route N1"
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
