@@ -1,0 +1,27 @@
+enum IncidentType {
+  ACCIDENT
+  VOL
+  INCENDIE
+  INONDATION
+  ROUTE_DANGEREUSE
+  URGENCE_MEDICALE
+}
+
+enum IncidentStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+model Incident {
+  id            String         @id @default(cuid())
+  title         String
+  description   String
+  type          IncidentType
+  status        IncidentStatus @default(OPEN)
+  latitude      Float?
+  longitude     Float?
+  locationLabel String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
