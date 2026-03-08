@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type ORPC = any;
 
@@ -18,6 +18,13 @@ export type CreateIncidentInput = {
 };
 
 export function useCreateIncident(orpc: ORPC) {
+  const queryClient = useQueryClient();
+
   return useMutation<any, Error, CreateIncidentInput>(
-    orpc.incident.create.mutationOptions());
+    orpc.incident.create.mutationOptions({
+      OnSettled: async () => {
+        await queryClient.invalidateQueries();
+    }
+  })
+);
 }
