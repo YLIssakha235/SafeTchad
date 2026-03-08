@@ -29,8 +29,8 @@ model Incident {
   type        IncidentType
   status      IncidentStatus @default(EN_COURS)
   ville       Ville
-  quartier    Quartier?
-  axeRoutier  String?        // texte libre ex: "Route N1"
+  quartier    Quartier
+  axeRoutier  String        // texte libre ex: "Route N1"
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 }

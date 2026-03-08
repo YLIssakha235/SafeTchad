@@ -20,8 +20,8 @@ const CreateIncidentInput = z.object({
   description: z.string().min(10),
   type: IncidentTypeEnum,
   ville: VilleEnum,
-  quartier: QuartierEnum.optional(),
-  axeRoutier: z.string().optional(),
+  quartier: QuartierEnum,
+  axeRoutier: z.string(),
 });
 
 export const incidentRouter = {

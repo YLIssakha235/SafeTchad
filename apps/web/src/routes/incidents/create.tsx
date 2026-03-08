@@ -16,7 +16,7 @@ type IncidentType =
   | "URGENCE_MEDICALE";
 
 type Ville = "NDJAMENA";
-type Quartier = "FARCHA" | "DIGUEL" | "";
+type Quartier = "FARCHA" | "DIGUEL";
 
 function RouteComponent() {
   const navigate = useNavigate();
@@ -25,8 +25,8 @@ function RouteComponent() {
   const [description, setDescription] = useState("");
   const [type, setType] = useState<IncidentType>("ACCIDENT");
   const [ville, setVille] = useState<Ville>("NDJAMENA");
-  const [quartier, setQuartier] = useState<Quartier>("");
-  const [axeRoutier, setAxeRoutier] = useState("");
+  const [quartier, setQuartier] = useState<Quartier>("FARCHA");
+  const [axeRoutier, setAxeRoutier] = useState("Rond point cheval");
   const [errorMessage, setErrorMessage] = useState("");
 
   const createIncident = useMutation(
@@ -51,40 +51,45 @@ function RouteComponent() {
       description,
       type,
       ville,
-      quartier: quartier || undefined,
-      axeRoutier: axeRoutier || undefined,
+      quartier,
+      axeRoutier,
     });
   }
 
   return (
-    <div className="p-6 max-w-xl">
-      <h1 className="text-2xl font-bold mb-4">Signaler un incident</h1>
+    <div className="mx-auto max-w-xl p-6 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Signaler un incident</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Remplissez le formulaire pour signaler un incident dans votre zone.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block mb-1">Titre</label>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Titre</label>
           <input
-            className="w-full border rounded px-3 py-2"
-            placeholder="Titre"
+            className="w-full rounded-md border px-3 py-2"
+            placeholder="Ex: Accident sur l'avenue Mobutu"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
 
-        <div>
-          <label className="block mb-1">Description</label>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Description</label>
           <textarea
-            className="w-full border rounded px-3 py-2"
-            placeholder="Description"
+            className="w-full rounded-md border px-3 py-2"
+            placeholder="Décrivez ce qui se passe..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
 
-        <div>
-          <label className="block mb-1">Type d'incident</label>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Type d'incident</label>
           <select
-            className="w-full border rounded px-3 py-2"
+            className="w-full rounded-md border px-3 py-2"
             value={type}
             onChange={(e) => setType(e.target.value as IncidentType)}
           >
@@ -97,10 +102,10 @@ function RouteComponent() {
           </select>
         </div>
 
-        <div>
-          <label className="block mb-1">Ville</label>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Ville</label>
           <select
-            className="w-full border rounded px-3 py-2"
+            className="w-full rounded-md border px-3 py-2"
             value={ville}
             onChange={(e) => setVille(e.target.value as Ville)}
           >
@@ -108,24 +113,23 @@ function RouteComponent() {
           </select>
         </div>
 
-        <div>
-          <label className="block mb-1">Quartier</label>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Quartier</label>
           <select
-            className="w-full border rounded px-3 py-2"
+            className="w-full rounded-md border px-3 py-2"
             value={quartier}
             onChange={(e) => setQuartier(e.target.value as Quartier)}
           >
-            <option value="">-- Quartier (optionnel) --</option>
             <option value="FARCHA">Farcha</option>
             <option value="DIGUEL">Diguel</option>
           </select>
         </div>
 
-        <div>
-          <label className="block mb-1">Axe routier</label>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Axe routier</label>
           <input
-            className="w-full border rounded px-3 py-2"
-            placeholder="Axe routier (optionnel)"
+            className="w-full rounded-md border px-3 py-2"
+            placeholder="Ex: Rond point cheval"
             value={axeRoutier}
             onChange={(e) => setAxeRoutier(e.target.value)}
           />
@@ -135,10 +139,10 @@ function RouteComponent() {
 
         <button
           type="submit"
-          className="border rounded px-4 py-2"
+          className="w-full rounded-md border px-4 py-2 font-medium"
           disabled={createIncident.isPending}
         >
-          {createIncident.isPending ? "Envoi..." : "Signaler"}
+          {createIncident.isPending ? "Envoi..." : "Signaler l'incident"}
         </button>
       </form>
     </div>
