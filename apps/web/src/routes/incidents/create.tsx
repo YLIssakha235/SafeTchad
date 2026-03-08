@@ -1,6 +1,6 @@
-import { useMutation } from "@tanstack/react-query";
+import { useState} from "react";
+import { useCreateIncident } from "@my-better-t-app/hooks";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/incidents/create")({
@@ -29,31 +29,27 @@ function RouteComponent() {
   const [axeRoutier, setAxeRoutier] = useState("Rond point cheval");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const createIncident = useMutation(
-    orpc.incident.create.mutationOptions({
-      onSuccess: async () => {
-        await navigate({ to: "/incidents" });
-      },
-      onError: (error) => {
-        setErrorMessage(
-          error.message || "Une erreur est survenue lors du signalement."
-        );
-      },
-    })
-  );
+  const createIncident = useCreateIncident(orpc);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMessage("");
 
-    await createIncident.mutateAsync({
-      title,
-      description,
-      type,
-      ville,
-      quartier,
-      axeRoutier,
-    });
+    try{
+      await createIncident.mutateAsync({
+        title,
+        description,
+        type,
+        ville,
+        quartier,
+        axeRoutier,
+      });
+      await navigate({ to: "/incidents" });
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Une erreur est survenue lors du signalement."
+      );
+    }
   }
 
   return (

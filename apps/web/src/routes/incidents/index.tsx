@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useIncidents } from "@my-better-t-app/hooks";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/incidents/")({
@@ -39,14 +39,20 @@ function getStatusLabel(status: string) {
 }
 
 function RouteComponent() {
-  const { data: incidents, isLoading } = useQuery(
-    orpc.incident.list.queryOptions({})
-  );
+  const { data: incidents, isLoading, error } = useIncidents(orpc);
 
   if (isLoading) {
     return (
       <div className="p-6">
         <p>Chargement des incidents...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <p>Erreur lors du chargement des incidents.</p>
       </div>
     );
   }
