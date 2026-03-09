@@ -128,3 +128,8 @@ function RouteComponent() {
     </div>
   );
 }
+
+
+// la diffrecene qu'on foit avoir avec web et mobile 
+// ici on fait beforloading et on affiche un message de chargement
+// et on affiche les incidents dans une liste

@@ -22,6 +22,14 @@ enum Quartier {
   DIGUEL
 }
 
+enum AxeRoutier {
+  Avenue_MOBUTU
+  Route_NDjamena_Moundou
+  Route_Charles_de_Gaulle
+  Route_Globe_Terrestre
+}
+
+
 model Incident {
   id          String         @id @default(cuid())
   title       String
@@ -30,7 +38,7 @@ model Incident {
   status      IncidentStatus @default(EN_COURS)
   ville       Ville
   quartier    Quartier
-  axeRoutier  String        // texte libre ex: "Route N1"
+  axeRoutier  AxeRoutier
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 }

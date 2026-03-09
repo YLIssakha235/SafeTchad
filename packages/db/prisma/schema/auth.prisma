@@ -13,6 +13,16 @@ model User {
   @@map("user")
 }
 
+// création de model 
+// model Comment {
+//   id String @id @default(uuid())
+//   url String
+//   text String 
+
+
+//   user User @relation()
+// }
+
 model Session {
   id        String   @id
   expiresAt DateTime

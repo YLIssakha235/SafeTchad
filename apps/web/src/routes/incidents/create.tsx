@@ -144,3 +144,16 @@ function RouteComponent() {
     </div>
   );
 }
+
+
+
+// type Incident={
+
+//   title:  string
+//   description: string
+
+// }
+
+
+// function useIncident() {
+//   const[newIncident, setNewIncident] = useState<Incident | null>(null)

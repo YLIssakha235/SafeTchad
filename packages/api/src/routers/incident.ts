@@ -1,31 +1,17 @@
 import { z } from "zod";
-import prisma from "@my-better-t-app/db";
-import { publicProcedure } from "../index"; 
-
-
-const IncidentTypeEnum = z.enum([
-  "ACCIDENT",
-  "VOL",
-  "INCENDIE",
-  "INONDATION",
-  "ROUTE_DANGEREUSE",
-  "URGENCE_MEDICALE",
-]);
-
-const VilleEnum = z.enum(["NDJAMENA"]);
-const QuartierEnum = z.enum(["FARCHA", "DIGUEL"]);
+import prisma, { IncidentType, IncidentStatus, Ville, Quartier, AxeRoutier } from "@my-better-t-app/db";
+import { publicProcedure } from "../index";
 
 const CreateIncidentInput = z.object({
   title: z.string().min(3),
   description: z.string().min(10),
-  type: IncidentTypeEnum,
-  ville: VilleEnum,
-  quartier: QuartierEnum,
-  axeRoutier: z.string(),
+  type: z.nativeEnum(IncidentType),
+  ville: z.nativeEnum(Ville),
+  quartier: z.nativeEnum(Quartier).optional().nullable(),
+  axeRoutier: z.nativeEnum(AxeRoutier).optional().nullable(),
 });
 
 export const incidentRouter = {
-
   create: publicProcedure
     .input(CreateIncidentInput)
     .handler(async ({ input }) => {
@@ -48,5 +34,4 @@ export const incidentRouter = {
       if (!incident) throw new Error("Incident non trouvé");
       return incident;
     }),
-
 };
