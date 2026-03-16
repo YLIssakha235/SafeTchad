@@ -44,8 +44,8 @@ export type Incident = {
   type: IncidentType;
   status: IncidentStatus;
   ville: Ville;
-  quartier?: Quartier;
-  axeRoutier?: AxeRoutier;
+  quartier: Quartier;
+  axeRoutier: AxeRoutier;
 };
 
 export type CreateIncidentInput = Omit<Incident, "id" | "status">;
@@ -64,9 +64,11 @@ export function useIncidents(orpc: ORPC) {
 export function useCreateIncident(orpc: ORPC) {
   const queryClient = useQueryClient();
   const incidentsQueryOptions = orpc.incident.list.queryOptions();
-  
-  return useMutation({
-    ...orpc.incident.create.mutationOptions(),
+
+  return useMutation<unknown, Error, CreateIncidentInput>({
+    mutationFn: async (input: CreateIncidentInput) => {
+      return await orpc.incident.create(input);
+    },
     onSettled: async () => {
       await queryClient.invalidateQueries({
         queryKey: incidentsQueryOptions.queryKey,
