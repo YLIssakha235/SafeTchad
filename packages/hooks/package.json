@@ -12,6 +12,9 @@
   "dependencies": {
     "@my-better-t-app/api": "workspace:*",
     "@my-better-t-app/db": "workspace:*"
-
+  },
+  "devDependencies": {
+    "react": "^18.0.0",
+    "@types/react": "^18.0.0"
   }
 }

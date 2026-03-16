@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  useCreateIncident,
   formatLabel,
   INCIDENT_TYPES,
   VILLES,
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/incidents/create")({
 
 function RouteComponent() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -29,7 +30,17 @@ function RouteComponent() {
   const [axeRoutier, setAxeRoutier] = useState<AxeRoutier>(AXES_ROUTIERS[0]);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const createIncident = useCreateIncident(orpc);
+  const incidentsQueryOptions = orpc.incident.list.queryOptions();
+
+  const createIncident = useMutation(
+    orpc.incident.create.mutationOptions({
+      onSettled: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: incidentsQueryOptions.queryKey,
+        });
+      },
+    })
+  );
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

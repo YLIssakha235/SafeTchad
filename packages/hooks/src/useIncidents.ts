@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-type ORPC = any;
+import type { orpc as ORPC } from "../../../apps/web/src/utils/orpc";
+import { useState } from "react";
 
 export const INCIDENT_TYPES = [
   "ACCIDENT",
@@ -23,8 +23,9 @@ export const QUARTIERS = ["FARCHA", "DIGUEL"] as const;
 
 export const AXES_ROUTIERS = [
   "Avenue_MOBUTU",
-  "Avenue_CHARLES_DE_GAULLE",
-  "Boulevard_MARA",
+  "Route_NDjamena_Moundou",
+  "Route_Charles_de_Gaulle",
+  "Route_Globe_Terrestre",
 ] as const;
 
 export type IncidentType = (typeof INCIDENT_TYPES)[number];
@@ -50,29 +51,42 @@ export type Incident = {
 
 export type CreateIncidentInput = Omit<Incident, "id" | "status">;
 
-export function useIncidents(orpc: ORPC) {
+export function useIncidents(orpc: typeof ORPC) {
+  const [newIncident, setNewIncident] = useState<CreateIncidentInput>({
+    title: "",
+    description: "",
+    type: "ACCIDENT",
+    ville: "NDJAMENA",
+    quartier: "FARCHA",
+    axeRoutier: "Avenue_MOBUTU",
+  });
+
   const query = useQuery({
     ...orpc.incident.list.queryOptions(),
   });
 
-  return {
-    ...query,
-    data: (query.data ?? []) as Incident[],
-  };
-}
-
-export function useCreateIncident(orpc: ORPC) {
   const queryClient = useQueryClient();
   const incidentsQueryOptions = orpc.incident.list.queryOptions();
 
-  return useMutation<unknown, Error, CreateIncidentInput>({
-    mutationFn: async (input: CreateIncidentInput) => {
-      return await orpc.incident.create(input);
+  const createMutation = useMutation(
+    orpc.incident.create.mutationOptions({
+      onSettled: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: incidentsQueryOptions.queryKey,
+        });
+      },
+    })
+  );
+
+  return {
+    ...query,
+    data: (query.data ?? []) as Incident[],
+    newIncident,
+    setNewIncident,
+    create() {
+      createMutation.mutate(newIncident);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: incidentsQueryOptions.queryKey,
-      });
-    },
-  });
+    isCreating: createMutation.isPending,
+    createError: createMutation.error,
+  };
 }
