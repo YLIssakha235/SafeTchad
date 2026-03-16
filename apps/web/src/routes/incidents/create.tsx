@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { useCreateIncident, formatLabel,IncidentType, Ville, Quartier, AxeRoutier } from "@my-better-t-app/hooks";
+import { 
+  useCreateIncident, 
+  formatLabel,
+  INCIDENT_TYPES,
+  VILLES,
+  QUARTIERS,
+  AXES_ROUTIERS,
+  type IncidentType, 
+  type Ville, 
+  type Quartier, 
+  type AxeRoutier 
+} from "@my-better-t-app/hooks";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { orpc } from "@/utils/orpc";
 
@@ -12,10 +23,10 @@ function RouteComponent() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState<IncidentType>(IncidentType.ACCIDENT);
-  const [ville, setVille] = useState<Ville>(Ville.NDJAMENA);
-  const [quartier, setQuartier] = useState<Quartier>(Quartier.FARCHA);
-  const [axeRoutier, setAxeRoutier] = useState<AxeRoutier>(AxeRoutier.Avenue_MOBUTU);
+  const [type, setType] = useState<IncidentType>(INCIDENT_TYPES[0]);
+  const [ville, setVille] = useState<Ville>(VILLES[0]);
+  const [quartier, setQuartier] = useState<Quartier | "">(QUARTIERS[0]);
+  const [axeRoutier, setAxeRoutier] = useState<AxeRoutier | "">(AXES_ROUTIERS[0]);
   const [errorMessage, setErrorMessage] = useState("");
 
   const createIncident = useCreateIncident(orpc);
@@ -24,7 +35,14 @@ function RouteComponent() {
     e.preventDefault();
     setErrorMessage("");
     try {
-      await createIncident.mutateAsync({ title, description, type, ville, quartier, axeRoutier });
+      await createIncident.mutateAsync({ 
+        title, 
+        description, 
+        type, 
+        ville, 
+        quartier,
+        axeRoutier,
+      });
       await navigate({ to: "/incidents" });
     } catch (error) {
       setErrorMessage(
@@ -70,7 +88,7 @@ function RouteComponent() {
             value={type}
             onChange={(e) => setType(e.target.value as IncidentType)}
           >
-            {Object.values(IncidentType).map((t) => (
+            {INCIDENT_TYPES.map((t) => (
               <option key={t} value={t}>{formatLabel(t)}</option>
             ))}
           </select>
@@ -83,7 +101,7 @@ function RouteComponent() {
             value={ville}
             onChange={(e) => setVille(e.target.value as Ville)}
           >
-            {Object.values(Ville).map((v) => (
+            {VILLES.map((v) => (
               <option key={v} value={v}>{formatLabel(v)}</option>
             ))}
           </select>
@@ -96,7 +114,8 @@ function RouteComponent() {
             value={quartier}
             onChange={(e) => setQuartier(e.target.value as Quartier)}
           >
-            {Object.values(Quartier).map((q) => (
+            <option value="">Non précisé</option>
+            {QUARTIERS.map((q) => (
               <option key={q} value={q}>{formatLabel(q)}</option>
             ))}
           </select>
@@ -109,7 +128,8 @@ function RouteComponent() {
             value={axeRoutier}
             onChange={(e) => setAxeRoutier(e.target.value as AxeRoutier)}
           >
-            {Object.values(AxeRoutier).map((a) => (
+            <option value="">Non précisé</option>
+            {AXES_ROUTIERS.map((a) => (
               <option key={a} value={a}>{formatLabel(a)}</option>
             ))}
           </select>
