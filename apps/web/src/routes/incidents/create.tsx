@@ -1,5 +1,5 @@
-import { useState} from "react";
-import { useCreateIncident } from "@my-better-t-app/hooks";
+import { useState } from "react";
+import { useCreateIncident, formatLabel,IncidentType, Ville, Quartier, AxeRoutier } from "@my-better-t-app/hooks";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { orpc } from "@/utils/orpc";
 
@@ -7,26 +7,15 @@ export const Route = createFileRoute("/incidents/create")({
   component: RouteComponent,
 });
 
-type IncidentType =
-  | "ACCIDENT"
-  | "VOL"
-  | "INCENDIE"
-  | "INONDATION"
-  | "ROUTE_DANGEREUSE"
-  | "URGENCE_MEDICALE";
-
-type Ville = "NDJAMENA";
-type Quartier = "FARCHA" | "DIGUEL";
-
 function RouteComponent() {
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState<IncidentType>("ACCIDENT");
-  const [ville, setVille] = useState<Ville>("NDJAMENA");
-  const [quartier, setQuartier] = useState<Quartier>("FARCHA");
-  const [axeRoutier, setAxeRoutier] = useState("Rond point cheval");
+  const [type, setType] = useState<IncidentType>(IncidentType.ACCIDENT);
+  const [ville, setVille] = useState<Ville>(Ville.NDJAMENA);
+  const [quartier, setQuartier] = useState<Quartier>(Quartier.FARCHA);
+  const [axeRoutier, setAxeRoutier] = useState<AxeRoutier>(AxeRoutier.Avenue_MOBUTU);
   const [errorMessage, setErrorMessage] = useState("");
 
   const createIncident = useCreateIncident(orpc);
@@ -34,16 +23,8 @@ function RouteComponent() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMessage("");
-
-    try{
-      await createIncident.mutateAsync({
-        title,
-        description,
-        type,
-        ville,
-        quartier,
-        axeRoutier,
-      });
+    try {
+      await createIncident.mutateAsync({ title, description, type, ville, quartier, axeRoutier });
       await navigate({ to: "/incidents" });
     } catch (error) {
       setErrorMessage(
@@ -89,12 +70,9 @@ function RouteComponent() {
             value={type}
             onChange={(e) => setType(e.target.value as IncidentType)}
           >
-            <option value="ACCIDENT">Accident</option>
-            <option value="VOL">Vol</option>
-            <option value="INCENDIE">Incendie</option>
-            <option value="INONDATION">Inondation</option>
-            <option value="ROUTE_DANGEREUSE">Route dangereuse</option>
-            <option value="URGENCE_MEDICALE">Urgence médicale</option>
+            {Object.values(IncidentType).map((t) => (
+              <option key={t} value={t}>{formatLabel(t)}</option>
+            ))}
           </select>
         </div>
 
@@ -105,7 +83,9 @@ function RouteComponent() {
             value={ville}
             onChange={(e) => setVille(e.target.value as Ville)}
           >
-            <option value="NDJAMENA">N'Djamena</option>
+            {Object.values(Ville).map((v) => (
+              <option key={v} value={v}>{formatLabel(v)}</option>
+            ))}
           </select>
         </div>
 
@@ -116,19 +96,23 @@ function RouteComponent() {
             value={quartier}
             onChange={(e) => setQuartier(e.target.value as Quartier)}
           >
-            <option value="FARCHA">Farcha</option>
-            <option value="DIGUEL">Diguel</option>
+            {Object.values(Quartier).map((q) => (
+              <option key={q} value={q}>{formatLabel(q)}</option>
+            ))}
           </select>
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium">Axe routier</label>
-          <input
+          <select
             className="w-full rounded-md border px-3 py-2"
-            placeholder="Ex: Rond point cheval"
             value={axeRoutier}
-            onChange={(e) => setAxeRoutier(e.target.value)}
-          />
+            onChange={(e) => setAxeRoutier(e.target.value as AxeRoutier)}
+          >
+            {Object.values(AxeRoutier).map((a) => (
+              <option key={a} value={a}>{formatLabel(a)}</option>
+            ))}
+          </select>
         </div>
 
         {errorMessage && <p className="text-red-500">{errorMessage}</p>}
@@ -144,16 +128,3 @@ function RouteComponent() {
     </div>
   );
 }
-
-
-
-// type Incident={
-
-//   title:  string
-//   description: string
-
-// }
-
-
-// function useIncident() {
-//   const[newIncident, setNewIncident] = useState<Incident | null>(null)

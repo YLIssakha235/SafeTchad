@@ -220,6 +220,9 @@ importers:
       '@my-better-t-app/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@my-better-t-app/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@my-better-t-app/env':
         specifier: workspace:*
         version: link:../../packages/env
@@ -476,6 +479,9 @@ importers:
       '@my-better-t-app/api':
         specifier: workspace:*
         version: link:../api
+      '@my-better-t-app/db':
+        specifier: workspace:*
+        version: link:../db
       '@tanstack/react-query':
         specifier: ^5.0.0
         version: 5.90.21(react@18.3.1)

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import prisma, { IncidentType, IncidentStatus, Ville, Quartier, AxeRoutier } from "@my-better-t-app/db";
+import prisma, { IncidentType, Ville, Quartier, AxeRoutier } from "@my-better-t-app/db";
 import { publicProcedure } from "../index";
 
 const CreateIncidentInput = z.object({
@@ -7,8 +7,8 @@ const CreateIncidentInput = z.object({
   description: z.string().min(10),
   type: z.nativeEnum(IncidentType),
   ville: z.nativeEnum(Ville),
-  quartier: z.nativeEnum(Quartier).optional().nullable(),
-  axeRoutier: z.nativeEnum(AxeRoutier).optional().nullable(),
+  quartier: z.nativeEnum(Quartier),
+  axeRoutier: z.nativeEnum(AxeRoutier),
 });
 
 export const incidentRouter = {
