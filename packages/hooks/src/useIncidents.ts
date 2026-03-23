@@ -2,31 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { orpc as ORPC } from "../../../apps/web/src/utils/orpc";
 import { useState } from "react";
 
-export const INCIDENT_TYPES = [
-  "ACCIDENT",
-  "VOL",
-  "INCENDIE",
-  "INONDATION",
-  "ROUTE_DANGEREUSE",
-  "URGENCE_MEDICALE",
-] as const;
+export const INCIDENT_TYPES = ["ACCIDENT","VOL","INCENDIE","INONDATION","ROUTE_DANGEREUSE","URGENCE_MEDICALE",] as const;
 
-export const INCIDENT_STATUSES = [
-  "EN_COURS",
-  "RESOLU",
-  "ANNULE",
-] as const;
+export const INCIDENT_STATUSES = ["EN_COURS","RESOLU","ANNULE",] as const;
 
 export const VILLES = ["NDJAMENA"] as const;
 
 export const QUARTIERS = ["FARCHA", "DIGUEL"] as const;
 
-export const AXES_ROUTIERS = [
-  "Avenue_MOBUTU",
-  "Route_NDjamena_Moundou",
-  "Route_Charles_de_Gaulle",
-  "Route_Globe_Terrestre",
-] as const;
+export const AXES_ROUTIERS = ["Avenue_MOBUTU","Route_NDjamena_Moundou","Route_Charles_de_Gaulle","Route_Globe_Terrestre",] as const;
 
 export type IncidentType = (typeof INCIDENT_TYPES)[number];
 export type IncidentStatus = (typeof INCIDENT_STATUSES)[number];
@@ -38,6 +22,24 @@ export function formatLabel(value: string): string {
   return value.replace(/_/g, " ");
 }
 
+
+export type IncidentReporter = {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+};
+
+export type IncidentMedia = {
+  id: string;
+  url: string;
+  filename: string;
+  mimeType: string;
+  mediaType: "IMAGE" | "VIDEO";
+  createdAt: string | Date;
+
+};
+
 export type Incident = {
   id: string;
   title: string;
@@ -47,9 +49,16 @@ export type Incident = {
   ville: Ville;
   quartier: Quartier;
   axeRoutier: AxeRoutier;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  reporterId: string;
+  reporter?: IncidentReporter;
+  medias?: IncidentMedia[];
 };
 
-export type CreateIncidentInput = Omit<Incident, "id" | "status">;
+
+
+export type CreateIncidentInput = Omit<Incident,"id" | "status" | "createdAt" | "updatedAt" | "reporterId" | "reporter" | "medias">;
 
 export function useIncidents(orpc: typeof ORPC) {
   const [newIncident, setNewIncident] = useState<CreateIncidentInput>({
@@ -78,8 +87,11 @@ export function useIncidents(orpc: typeof ORPC) {
     })
   );
 
+  //const incidents = (query.data ?? []) as unknown as Incident[];
+
   return {
     ...query,
+    //data: incidents,
     data: (query.data ?? []) as Incident[],
     newIncident,
     setNewIncident,
