@@ -29,6 +29,11 @@ enum AxeRoutier {
   Route_Globe_Terrestre
 }
 
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
 
 model Incident {
   id          String         @id @default(cuid())
@@ -39,6 +44,25 @@ model Incident {
   ville       Ville
   quartier    Quartier
   axeRoutier  AxeRoutier
+
+  reporterId  String
+  reporter    User           @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  medias       IncidentMedia[]
+
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+}
+
+model IncidentMedia {
+  id         String    @id @default(cuid())
+  incidentId String
+  incident   Incident  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  url        String
+  filename   String
+  mimeType   String
+  mediaType  MediaType
+
+  createdAt  DateTime  @default(now())
 }

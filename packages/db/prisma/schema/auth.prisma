@@ -8,6 +8,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  incidents      Incident[] // ajout de la relation avec le modèle Incident
 
   @@unique([email])
   @@map("user")
