@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   formatLabel,
   INCIDENT_TYPES,
@@ -11,7 +12,6 @@ import {
   type Quartier,
   type AxeRoutier,
 } from "@my-better-t-app/hooks";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/incidents/create")({
@@ -31,6 +31,11 @@ function RouteComponent() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const incidentsQueryOptions = orpc.incident.list.queryOptions();
+
+  const authQuery = useQuery({
+    ...orpc.privateData.queryOptions(),
+    retry: false,
+  });
 
   const createIncident = useMutation(
     orpc.incident.create.mutationOptions({
@@ -66,6 +71,9 @@ function RouteComponent() {
     }
   }
 
+  const isAuthenticated = authQuery.isSuccess;
+  const isAuthLoading = authQuery.isLoading;
+
   return (
     <div className="mx-auto max-w-xl p-6 space-y-6">
       <div>
@@ -75,97 +83,128 @@ function RouteComponent() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Titre</label>
-          <input
-            className="w-full rounded-md border px-3 py-2"
-            placeholder="Ex: Accident sur l'avenue Mobutu"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+      {isAuthLoading ? (
+        <div className="rounded-md border p-4 text-sm text-muted-foreground">
+          Vérification de votre session...
         </div>
+      ) : !isAuthenticated ? (
+        <div className="space-y-4 rounded-md border p-5">
+          <div>
+            <h2 className="text-lg font-semibold">Connexion requise</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Vous devez être connecté pour signaler un incident.
+            </p>
+          </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Description</label>
-          <textarea
-            className="w-full rounded-md border px-3 py-2"
-            placeholder="Décrivez ce qui se passe..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <div className="flex gap-3">
+            <Link
+              to="/login"
+              className="rounded-md border px-4 py-2 font-medium"
+            >
+              Sign In
+            </Link>
+
+            <Link
+              to="/incidents"
+              className="rounded-md border px-4 py-2 font-medium"
+            >
+              Voir les incidents
+            </Link>
+          </div>
         </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Titre</label>
+            <input
+              className="w-full rounded-md border px-3 py-2"
+              placeholder="Ex: Accident sur l'avenue Mobutu"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Type d'incident</label>
-          <select
-            className="w-full rounded-md border px-3 py-2"
-            value={type}
-            onChange={(e) => setType(e.target.value as IncidentType)}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Description</label>
+            <textarea
+              className="w-full rounded-md border px-3 py-2"
+              placeholder="Décrivez ce qui se passe..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Type d'incident</label>
+            <select
+              className="w-full rounded-md border px-3 py-2"
+              value={type}
+              onChange={(e) => setType(e.target.value as IncidentType)}
+            >
+              {INCIDENT_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {formatLabel(t)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Ville</label>
+            <select
+              className="w-full rounded-md border px-3 py-2"
+              value={ville}
+              onChange={(e) => setVille(e.target.value as Ville)}
+            >
+              {VILLES.map((v) => (
+                <option key={v} value={v}>
+                  {formatLabel(v)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Quartier</label>
+            <select
+              className="w-full rounded-md border px-3 py-2"
+              value={quartier}
+              onChange={(e) => setQuartier(e.target.value as Quartier)}
+            >
+              {QUARTIERS.map((q) => (
+                <option key={q} value={q}>
+                  {formatLabel(q)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Axe routier</label>
+            <select
+              className="w-full rounded-md border px-3 py-2"
+              value={axeRoutier}
+              onChange={(e) => setAxeRoutier(e.target.value as AxeRoutier)}
+            >
+              {AXES_ROUTIERS.map((a) => (
+                <option key={a} value={a}>
+                  {formatLabel(a)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+
+          <button
+            type="submit"
+            className="w-full rounded-md border px-4 py-2 font-medium"
+            disabled={createIncident.isPending}
           >
-            {INCIDENT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {formatLabel(t)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Ville</label>
-          <select
-            className="w-full rounded-md border px-3 py-2"
-            value={ville}
-            onChange={(e) => setVille(e.target.value as Ville)}
-          >
-            {VILLES.map((v) => (
-              <option key={v} value={v}>
-                {formatLabel(v)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Quartier</label>
-          <select
-            className="w-full rounded-md border px-3 py-2"
-            value={quartier}
-            onChange={(e) => setQuartier(e.target.value as Quartier)}
-          >
-            {QUARTIERS.map((q) => (
-              <option key={q} value={q}>
-                {formatLabel(q)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Axe routier</label>
-          <select
-            className="w-full rounded-md border px-3 py-2"
-            value={axeRoutier}
-            onChange={(e) => setAxeRoutier(e.target.value as AxeRoutier)}
-          >
-            {AXES_ROUTIERS.map((a) => (
-              <option key={a} value={a}>
-                {formatLabel(a)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-
-        <button
-          type="submit"
-          className="w-full rounded-md border px-4 py-2 font-medium"
-          disabled={createIncident.isPending}
-        >
-          {createIncident.isPending ? "Envoi..." : "Signaler l'incident"}
-        </button>
-      </form>
+            {createIncident.isPending ? "Envoi..." : "Signaler l'incident"}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

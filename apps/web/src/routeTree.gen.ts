@@ -15,6 +15,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as IncidentsIndexRouteImport } from './routes/incidents/index'
 import { Route as IncidentsCreateRouteImport } from './routes/incidents/create'
+import { Route as IncidentsIncidentIdRouteImport } from './routes/incidents/$incidentId'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -48,6 +49,11 @@ const IncidentsCreateRoute = IncidentsCreateRouteImport.update({
   path: '/create',
   getParentRoute: () => IncidentsRoute,
 } as any)
+const IncidentsIncidentIdRoute = IncidentsIncidentIdRouteImport.update({
+  id: '/$incidentId',
+  path: '/$incidentId',
+  getParentRoute: () => IncidentsRoute,
+} as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/incidents': typeof IncidentsRouteWithChildren
   '/login': typeof LoginRoute
+  '/incidents/$incidentId': typeof IncidentsIncidentIdRoute
   '/incidents/create': typeof IncidentsCreateRoute
   '/incidents/': typeof IncidentsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/incidents/$incidentId': typeof IncidentsIncidentIdRoute
   '/incidents/create': typeof IncidentsCreateRoute
   '/incidents': typeof IncidentsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/incidents': typeof IncidentsRouteWithChildren
   '/login': typeof LoginRoute
+  '/incidents/$incidentId': typeof IncidentsIncidentIdRoute
   '/incidents/create': typeof IncidentsCreateRoute
   '/incidents/': typeof IncidentsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/incidents'
     | '/login'
+    | '/incidents/$incidentId'
     | '/incidents/create'
     | '/incidents/'
     | '/api/auth/$'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/login'
+    | '/incidents/$incidentId'
     | '/incidents/create'
     | '/incidents'
     | '/api/auth/$'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/incidents'
     | '/login'
+    | '/incidents/$incidentId'
     | '/incidents/create'
     | '/incidents/'
     | '/api/auth/$'
@@ -174,6 +186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IncidentsCreateRouteImport
       parentRoute: typeof IncidentsRoute
     }
+    '/incidents/$incidentId': {
+      id: '/incidents/$incidentId'
+      path: '/$incidentId'
+      fullPath: '/incidents/$incidentId'
+      preLoaderRoute: typeof IncidentsIncidentIdRouteImport
+      parentRoute: typeof IncidentsRoute
+    }
     '/api/rpc/$': {
       id: '/api/rpc/$'
       path: '/api/rpc/$'
@@ -192,11 +211,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface IncidentsRouteChildren {
+  IncidentsIncidentIdRoute: typeof IncidentsIncidentIdRoute
   IncidentsCreateRoute: typeof IncidentsCreateRoute
   IncidentsIndexRoute: typeof IncidentsIndexRoute
 }
 
 const IncidentsRouteChildren: IncidentsRouteChildren = {
+  IncidentsIncidentIdRoute: IncidentsIncidentIdRoute,
   IncidentsCreateRoute: IncidentsCreateRoute,
   IncidentsIndexRoute: IncidentsIndexRoute,
 }
