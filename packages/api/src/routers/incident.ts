@@ -1,6 +1,9 @@
 import { z } from "zod";
+import { ORPCError } from "@orpc/server";
 import prisma, { IncidentType, Ville, Quartier, AxeRoutier } from "@my-better-t-app/db";
 import { publicProcedure, protectedProcedure } from "../index";
+
+
 
 const CreateIncidentInput = z.object({
   title: z.string().min(3),
@@ -17,7 +20,8 @@ export const incidentRouter = {
     .handler(async ({ input, context }) => {
       const userId = context.session?.user?.id;
 
-      if (!userId){throw new Error("Utilisateur non authentifié");}
+      // if (!userId){throw new Error("Utilisateur non authentifié");}
+      if (!userId){throw new ORPCError("UNAUTHORIZED");}
 
       return await prisma.incident.create({
         data: {
@@ -58,7 +62,7 @@ export const incidentRouter = {
         },
       });
 
-      if (!incident) throw new Error("Incident non trouvé");
+      if (!incident) throw new ORPCError("NOT_FOUND");
       
       return incident;
     }),
