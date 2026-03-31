@@ -1,16 +1,30 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { orpc as ORPC } from "../../../apps/web/src/utils/orpc";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationResult,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import { useState } from "react";
 
-export const INCIDENT_TYPES = ["ACCIDENT","VOL","INCENDIE","INONDATION","ROUTE_DANGEREUSE","URGENCE_MEDICALE",] as const;
+export const INCIDENT_TYPES = [
+  "ACCIDENT",
+  "VOL",
+  "INCENDIE",
+  "INONDATION",
+  "ROUTE_DANGEREUSE",
+  "URGENCE_MEDICALE",
+] as const;
 
-export const INCIDENT_STATUSES = ["EN_COURS","RESOLU","ANNULE",] as const;
-
+export const INCIDENT_STATUSES = ["EN_COURS", "RESOLU", "ANNULE"] as const;
 export const VILLES = ["NDJAMENA"] as const;
-
 export const QUARTIERS = ["FARCHA", "DIGUEL"] as const;
-
-export const AXES_ROUTIERS = ["Avenue_MOBUTU","Route_NDjamena_Moundou","Route_Charles_de_Gaulle","Route_Globe_Terrestre",] as const;
+export const AXES_ROUTIERS = [
+  "Avenue_MOBUTU",
+  "Route_NDjamena_Moundou",
+  "Route_Charles_de_Gaulle",
+  "Route_Globe_Terrestre",
+] as const;
 
 export type IncidentType = (typeof INCIDENT_TYPES)[number];
 export type IncidentStatus = (typeof INCIDENT_STATUSES)[number];
@@ -21,7 +35,6 @@ export type AxeRoutier = (typeof AXES_ROUTIERS)[number];
 export function formatLabel(value: string): string {
   return value.replace(/_/g, " ");
 }
-
 
 export type IncidentReporter = {
   id: string;
@@ -37,7 +50,6 @@ export type IncidentMedia = {
   mimeType: string;
   mediaType: "IMAGE" | "VIDEO";
   createdAt: string | Date;
-
 };
 
 export type Incident = {
@@ -56,11 +68,31 @@ export type Incident = {
   medias?: IncidentMedia[];
 };
 
+export type CreateIncidentInput = Omit<
+  Incident,
+  "id" | "status" | "createdAt" | "updatedAt" | "reporterId" | "reporter" | "medias"
+>;
 
+type QueryOptionsLike = {
+  queryKey: readonly unknown[];
+};
 
-export type CreateIncidentInput = Omit<Incident,"id" | "status" | "createdAt" | "updatedAt" | "reporterId" | "reporter" | "medias">;
+type MutationOptionsLike = object;
 
-export function useIncidents(orpc: typeof ORPC) {
+type IncidentsOrpc = {
+  incident: {
+    list: {
+      queryOptions: () => QueryOptionsLike;
+    };
+    create: {
+      mutationOptions: (options?: {
+        onSettled?: () => Promise<void> | void;
+      }) => MutationOptionsLike;
+    };
+  };
+};
+
+export function useIncidents(orpc: IncidentsOrpc) {
   const [newIncident, setNewIncident] = useState<CreateIncidentInput>({
     title: "",
     description: "",
@@ -72,7 +104,7 @@ export function useIncidents(orpc: typeof ORPC) {
 
   const query = useQuery({
     ...orpc.incident.list.queryOptions(),
-  });
+  }) as UseQueryResult<Incident[], Error>;
 
   const queryClient = useQueryClient();
   const incidentsQueryOptions = orpc.incident.list.queryOptions();
@@ -84,15 +116,12 @@ export function useIncidents(orpc: typeof ORPC) {
           queryKey: incidentsQueryOptions.queryKey,
         });
       },
-    })
-  );
-
-  //const incidents = (query.data ?? []) as unknown as Incident[];
+    }) as never
+  ) as UseMutationResult<Incident, Error, CreateIncidentInput, unknown>;
 
   return {
     ...query,
-    //data: incidents,
-    data: (query.data ?? []) as Incident[],
+    data: query.data ?? [],
     newIncident,
     setNewIncident,
     create() {
