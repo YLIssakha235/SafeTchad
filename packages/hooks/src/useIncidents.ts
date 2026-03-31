@@ -79,6 +79,7 @@ type QueryOptionsLike = {
 
 type MutationOptionsLike = object;
 
+// typage minimal avec objet pour éviter de dépendre de react-query dans le type d'orpc
 type IncidentsOrpc = {
   incident: {
     list: {
@@ -88,6 +89,10 @@ type IncidentsOrpc = {
       mutationOptions: (options?: {
         onSettled?: () => Promise<void> | void;
       }) => MutationOptionsLike;
+    };
+    getById:{
+      queryOptions: (options: {input: {id: string}}) => QueryOptionsLike;
+
     };
   };
 };
@@ -131,3 +136,19 @@ export function useIncidents(orpc: IncidentsOrpc) {
     createError: createMutation.error,
   };
 }
+
+
+// Hook pour récupérer un incident par son ID
+
+export function useIncidentById(orpc: IncidentsOrpc, id: string) {
+  const query = useQuery({
+    ...orpc.incident.getById.queryOptions({ input: { id } }),
+    enabled: !!id,
+  }) as UseQueryResult<Incident, Error>;
+
+  return {
+    ...query,
+    data: query.data ?? null,
+  };
+}
+
