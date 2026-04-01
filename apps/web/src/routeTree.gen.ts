@@ -17,6 +17,7 @@ import { Route as IncidentsIndexRouteImport } from './routes/incidents/index'
 import { Route as IncidentsCreateRouteImport } from './routes/incidents/create'
 import { Route as IncidentsIncidentIdRouteImport } from './routes/incidents/$incidentId'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
+import { Route as ApiIncidentsUploadRouteImport } from './routes/api/incidents/upload'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const LoginRoute = LoginRouteImport.update({
@@ -59,6 +60,11 @@ const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   path: '/api/rpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiIncidentsUploadRoute = ApiIncidentsUploadRouteImport.update({
+  id: '/api/incidents/upload',
+  path: '/api/incidents/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/incidents/create': typeof IncidentsCreateRoute
   '/incidents/': typeof IncidentsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/incidents/upload': typeof ApiIncidentsUploadRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
 }
 export interface FileRoutesByTo {
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/incidents/create': typeof IncidentsCreateRoute
   '/incidents': typeof IncidentsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/incidents/upload': typeof ApiIncidentsUploadRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
 }
 export interface FileRoutesById {
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/incidents/create': typeof IncidentsCreateRoute
   '/incidents/': typeof IncidentsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/incidents/upload': typeof ApiIncidentsUploadRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
 }
 export interface FileRouteTypes {
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/incidents/create'
     | '/incidents/'
     | '/api/auth/$'
+    | '/api/incidents/upload'
     | '/api/rpc/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/incidents/create'
     | '/incidents'
     | '/api/auth/$'
+    | '/api/incidents/upload'
     | '/api/rpc/$'
   id:
     | '__root__'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/incidents/create'
     | '/incidents/'
     | '/api/auth/$'
+    | '/api/incidents/upload'
     | '/api/rpc/$'
   fileRoutesById: FileRoutesById
 }
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IncidentsRoute: typeof IncidentsRouteWithChildren
   LoginRoute: typeof LoginRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiIncidentsUploadRoute: typeof ApiIncidentsUploadRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
@@ -200,6 +213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/incidents/upload': {
+      id: '/api/incidents/upload'
+      path: '/api/incidents/upload'
+      fullPath: '/api/incidents/upload'
+      preLoaderRoute: typeof ApiIncidentsUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -232,6 +252,7 @@ const rootRouteChildren: RootRouteChildren = {
   IncidentsRoute: IncidentsRouteWithChildren,
   LoginRoute: LoginRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiIncidentsUploadRoute: ApiIncidentsUploadRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }
 export const routeTree = rootRouteImport
