@@ -1,36 +1,14 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type UseMutationResult,
-  type UseQueryResult,
+import { useMutation,useQuery,useQueryClient,type UseMutationResult,type UseQueryResult,
 } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState } from "react"; // c'est quoi son problème ? 
+import {incidentTypeValues,incidentStatusValues,villeValues,quartierValues,axeRoutierValues,type IncidentType,
+  type IncidentStatus,type Ville,type Quartier,type AxeRoutier,type CreateIncidentInput,} from "@my-better-t-app/api/contracts/incident";
 
-export const INCIDENT_TYPES = [
-  "ACCIDENT",
-  "VOL",
-  "INCENDIE",
-  "INONDATION",
-  "ROUTE_DANGEREUSE",
-  "URGENCE_MEDICALE",
-] as const;
-
-export const INCIDENT_STATUSES = ["EN_COURS", "RESOLU", "ANNULE"] as const;
-export const VILLES = ["NDJAMENA"] as const;
-export const QUARTIERS = ["FARCHA", "DIGUEL"] as const;
-export const AXES_ROUTIERS = [
-  "Avenue_MOBUTU",
-  "Route_NDjamena_Moundou",
-  "Route_Charles_de_Gaulle",
-  "Route_Globe_Terrestre",
-] as const;
-
-export type IncidentType = (typeof INCIDENT_TYPES)[number];
-export type IncidentStatus = (typeof INCIDENT_STATUSES)[number];
-export type Ville = (typeof VILLES)[number];
-export type Quartier = (typeof QUARTIERS)[number];
-export type AxeRoutier = (typeof AXES_ROUTIERS)[number];
+export const INCIDENT_TYPES = incidentTypeValues;
+export const INCIDENT_STATUSES = incidentStatusValues;
+export const VILLES = villeValues;
+export const QUARTIERS = quartierValues;
+export const AXES_ROUTIERS = axeRoutierValues;
 
 export function formatLabel(value: string): string {
   return value.replace(/_/g, " ");
@@ -68,18 +46,12 @@ export type Incident = {
   medias?: IncidentMedia[];
 };
 
-export type CreateIncidentInput = Omit<
-  Incident,
-  "id" | "status" | "createdAt" | "updatedAt" | "reporterId" | "reporter" | "medias"
->;
-
 type QueryOptionsLike = {
   queryKey: readonly unknown[];
 };
 
 type MutationOptionsLike = object;
 
-// typage minimal avec objet pour éviter de dépendre de react-query dans le type d'orpc
 type IncidentsOrpc = {
   incident: {
     list: {
@@ -87,12 +59,12 @@ type IncidentsOrpc = {
     };
     create: {
       mutationOptions: (options?: {
+        onMutate?: () => void | Promise<void>;
         onSettled?: () => Promise<void> | void;
       }) => MutationOptionsLike;
     };
-    getById:{
-      queryOptions: (options: {input: {id: string}}) => QueryOptionsLike;
-
+    getById: {
+      queryOptions: (options: { input: { id: string } }) => QueryOptionsLike;
     };
   };
 };
@@ -107,15 +79,38 @@ export function useIncidents(orpc: IncidentsOrpc) {
     axeRoutier: "Avenue_MOBUTU",
   });
 
-  const query = useQuery({
-    ...orpc.incident.list.queryOptions(),
-  }) as UseQueryResult<Incident[], Error>;
-
   const queryClient = useQueryClient();
   const incidentsQueryOptions = orpc.incident.list.queryOptions();
 
-  const createMutation = useMutation(
+  const incidentsQuery = useQuery({
+    ...orpc.incident.list.queryOptions(),
+  }) as UseQueryResult<Incident[], Error>;
+
+  const createIncidentMutation = useMutation(
     orpc.incident.create.mutationOptions({
+      onMutate: async () => {
+        queryClient.setQueryData<Incident[]>(
+          incidentsQueryOptions.queryKey,
+          (old = []) => [
+            ...old,
+            {
+              id: `temp-${Date.now()}`,
+              title: newIncident.title,
+              description: newIncident.description,
+              type: newIncident.type,
+              status: "EN_COURS",
+              ville: newIncident.ville,
+              quartier: newIncident.quartier,
+              axeRoutier: newIncident.axeRoutier,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              reporterId: "temp-reporter",
+              reporter: undefined,
+              medias: [],
+            },
+          ]
+        );
+      },
       onSettled: async () => {
         await queryClient.invalidateQueries({
           queryKey: incidentsQueryOptions.queryKey,
@@ -124,31 +119,50 @@ export function useIncidents(orpc: IncidentsOrpc) {
     }) as never
   ) as UseMutationResult<Incident, Error, CreateIncidentInput, unknown>;
 
+  const list = incidentsQuery.data ?? [];
+  const isLoading = incidentsQuery.isLoading;
+  const error = incidentsQuery.error;
+  const refetch = incidentsQuery.refetch;
+
+  const isCreating = createIncidentMutation.isPending;
+  const createError = createIncidentMutation.error;
+
+  function create() {
+    createIncidentMutation.mutate(newIncident);
+  }
+
   return {
-    ...query,
-    data: query.data ?? [],
     newIncident,
     setNewIncident,
-    create() {
-      createMutation.mutate(newIncident);
-    },
-    isCreating: createMutation.isPending,
-    createError: createMutation.error,
+
+    list,
+    isLoading,
+    error,
+    refetch,
+
+    create,
+    isCreating,
+    createError,
   };
 }
 
-
-// Hook pour récupérer un incident par son ID
-
 export function useIncidentById(orpc: IncidentsOrpc, id: string) {
-  const query = useQuery({
-    ...orpc.incident.getById.queryOptions({ input: { id } }),
+  const incidentQuery = useQuery({
+    ...orpc.incident.getById.queryOptions({
+      input: { id },
+    }),
     enabled: !!id,
   }) as UseQueryResult<Incident, Error>;
 
+  const incident = incidentQuery.data ?? null;
+  const isLoading = incidentQuery.isLoading;
+  const error = incidentQuery.error;
+  const refetch = incidentQuery.refetch;
+
   return {
-    ...query,
-    data: query.data ?? null,
+    incident,
+    isLoading,
+    error,
+    refetch,
   };
 }
-
