@@ -23,3 +23,6 @@ export const protectedProcedure = publicProcedure.use(requireAuth);
 export * from "./routers/index";
 
 export * from "./services/incident-media";
+
+export * from "./contracts/incident";
+
