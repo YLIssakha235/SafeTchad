@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   formatLabel,
   INCIDENT_TYPES,
   VILLES,
   QUARTIERS,
   AXES_ROUTIERS,
+  useCreateIncident,
 } from "@my-better-t-app/hooks";
 import type {
   IncidentType,
@@ -40,7 +41,6 @@ function inputClass(hasError = false) {
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -49,37 +49,68 @@ function RouteComponent() {
   const [quartier, setQuartier] = useState<Quartier>(QUARTIERS[0]);
   const [axeRoutier, setAxeRoutier] = useState<AxeRoutier>(AXES_ROUTIERS[0]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isOnline, setIsOnline] = useState(true);
 
-  const incidentsQueryOptions = orpc.incident.list.queryOptions();
   const authQuery = useQuery({
     ...orpc.privateData.queryOptions(),
     retry: false,
+    refetchOnWindowFocus: false,
   });
 
-  const createIncident = useMutation(
-    orpc.incident.create.mutationOptions({
-      onSettled: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: incidentsQueryOptions.queryKey,
-        });
-      },
-    })
-  );
+  const {
+    newIncident,
+    setNewIncident,
+    createAsync,
+    isCreating,
+    createError,
+  } = useCreateIncident(orpc);
+
+  useEffect(() => {
+    setIsOnline(window.navigator.onLine);
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (createError) {
+      setErrorMessage(
+        createError instanceof Error
+          ? createError.message
+          : "Une erreur est survenue."
+      );
+    }
+  }, [createError]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMessage("");
 
-    try {
-      await createIncident.mutateAsync({
-        title,
-        description,
-        type,
-        ville,
-        quartier,
-        axeRoutier,
-      });
+    if (!isOnline) {
+      setErrorMessage("Création indisponible hors ligne.");
+      return;
+    }
 
+    // On synchronise les states locaux de la page avec le hook
+    setNewIncident({
+      title,
+      description,
+      type,
+      ville,
+      quartier,
+      axeRoutier,
+    });
+
+    try {
+      await createAsync();
       await navigate({ to: "/incidents" });
     } catch (error) {
       setErrorMessage(
@@ -94,7 +125,16 @@ function RouteComponent() {
         to="/incidents"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M19 12H5M12 5l-7 7 7 7" />
         </svg>
         Retour aux incidents
@@ -129,6 +169,7 @@ function RouteComponent() {
               </p>
             </div>
           </div>
+
           <div className="flex gap-3 pt-1">
             <Link
               to="/login"
@@ -148,6 +189,12 @@ function RouteComponent() {
 
       {authQuery.isSuccess && (
         <form onSubmit={handleSubmit} className="space-y-5 animate-fade-up delay-1">
+          {!isOnline && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+              Mode hors ligne : la création d’incident est temporairement indisponible.
+            </div>
+          )}
+
           <div className="rounded-xl border bg-card p-6 space-y-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Informations générales
@@ -169,7 +216,7 @@ function RouteComponent() {
             <div>
               <FieldLabel>Description</FieldLabel>
               <textarea
-                className={`${inputClass()} resize-none min-h-100px`} // possible de mettre entre []
+                className={`${inputClass()} resize-none min-h-[100px]`}
                 placeholder="Décrivez ce qui se passe avec le plus de détails possible…"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -231,6 +278,7 @@ function RouteComponent() {
                   ))}
                 </select>
               </div>
+
               <div>
                 <FieldLabel>Axe routier</FieldLabel>
                 <select
@@ -256,12 +304,20 @@ function RouteComponent() {
 
           <button
             type="submit"
-            disabled={createIncident.isPending || !title.trim()}
+            disabled={isCreating || !title.trim() || !isOnline}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand text-white font-medium text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
           >
-            {createIncident.isPending ? (
+            {isCreating ? (
               <>
-                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg
+                  className="animate-spin"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
                   <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeOpacity="0.3" />
                   <path d="M21 12a9 9 0 00-9-9" />
                 </svg>
@@ -269,10 +325,18 @@ function RouteComponent() {
               </>
             ) : (
               <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                >
                   <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
                 </svg>
-                Signaler l'incident
+                {isOnline ? "Signaler l'incident" : "Indisponible hors ligne"}
               </>
             )}
           </button>

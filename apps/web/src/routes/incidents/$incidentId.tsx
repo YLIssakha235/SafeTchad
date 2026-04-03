@@ -1,10 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { orpc } from "@/utils/orpc";
 import { formatLabel, useIncidentById } from "@my-better-t-app/hooks";
 
 export const Route = createFileRoute("/incidents/$incidentId")({
+  loader: async ({ context, params }) => {
+    await context.queryClient.ensureQueryData(
+      context.orpc.incident.getById.queryOptions({
+        input: { id: params.incidentId },
+      })
+    );
+  },
   component: RouteComponent,
 });
 
@@ -32,12 +39,34 @@ function RouteComponent() {
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadOk, setUploadOk] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
 
-  const { incident, isLoading, error } = useIncidentById(orpc, incidentId);
+  const { incident, isLoading, error, isFetching } = useIncidentById(orpc, incidentId);
+
+  useEffect(() => {
+    setIsOnline(window.navigator.onLine);
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   async function handleUpload() {
     if (!selectedFile) {
       setUploadMessage("Sélectionnez une image.");
+      return;
+    }
+
+    if (!isOnline) {
+      setUploadOk(false);
+      setUploadMessage("Upload indisponible hors ligne.");
       return;
     }
 
@@ -81,7 +110,7 @@ function RouteComponent() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading && !incident) {
     return (
       <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-10 space-y-4 animate-pulse">
         <div className="h-4 w-24 rounded-full bg-muted" />
@@ -91,7 +120,27 @@ function RouteComponent() {
     );
   }
 
-  if (error || !incident) {
+  if (error && !incident) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-10">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
+          <p className="text-2xl mb-2">📡</p>
+          <p className="font-medium text-foreground">Impossible de charger cet incident</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Vérifiez votre connexion puis réessayez.
+          </p>
+          <Link
+            to="/incidents"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeftIcon /> Retour aux incidents
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isLoading && !error && !incident) {
     return (
       <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-10">
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
@@ -108,6 +157,8 @@ function RouteComponent() {
     );
   }
 
+  if (!incident) return null;
+
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-10 space-y-6 animate-fade-up">
       <Link
@@ -118,10 +169,22 @@ function RouteComponent() {
         Tous les incidents
       </Link>
 
+      {error && incident && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300">
+          Mode hors ligne : affichage des dernières données disponibles.
+        </div>
+      )}
+
+      {isFetching && !error && (
+        <div className="text-xs text-muted-foreground">
+          Actualisation…
+        </div>
+      )}
+
       <div className="rounded-xl border bg-card overflow-hidden">
         <div className="p-5 sm:p-6 space-y-4">
           <div className="space-y-2">
-            <h1 className="font-display text-2xl sm:text-3xl leading-tight break-word"> 
+            <h1 className="font-display text-2xl sm:text-3xl leading-tight break-word">
               {incident.title}
             </h1>
             <p className="text-xs text-muted-foreground">
@@ -163,7 +226,7 @@ function RouteComponent() {
               Quartier
             </p>
             <p className="font-medium text-foreground">
-              {formatLabel(incident.quartier) || "—"}
+              {formatLabel(incident.quartier)}
             </p>
           </div>
           <div>
@@ -171,7 +234,7 @@ function RouteComponent() {
               Axe routier
             </p>
             <p className="font-medium text-foreground">
-              {formatLabel(incident.axeRoutier) || "—"}
+              {formatLabel(incident.axeRoutier)}
             </p>
           </div>
         </div>
@@ -216,6 +279,12 @@ function RouteComponent() {
       <div className="rounded-xl border bg-card p-5 sm:p-6 space-y-4 animate-fade-up delay-2">
         <h2 className="font-semibold text-base">Ajouter une image</h2>
 
+        {!isOnline && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+            Upload indisponible hors ligne.
+          </div>
+        )}
+
         <div className="space-y-3">
           <label className="flex items-start sm:items-center gap-3 rounded-lg border-2 border-dashed border-border hover:border-brand/50 transition-colors cursor-pointer p-4 group">
             <span className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-muted group-hover:bg-brand/10 transition-colors text-muted-foreground group-hover:text-brand">
@@ -242,7 +311,7 @@ function RouteComponent() {
           <button
             type="button"
             onClick={handleUpload}
-            disabled={isUploading || !selectedFile}
+            disabled={isUploading || !selectedFile || !isOnline}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-brand text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           >
             {isUploading ? (

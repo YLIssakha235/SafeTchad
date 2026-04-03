@@ -1,20 +1,27 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+
 import { getUser } from "@/functions/get-user";
 import { orpc } from "@/utils/orpc";
+
 import { useIncidents } from "@my-better-t-app/hooks";
 
-const orpcForHook = orpc as Parameters<typeof useIncidents>[0];
-
 export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
   beforeLoad: async () => {
     const session = await getUser();
     return { session };
   },
+
   loader: async ({ context }) => {
-    if (!context.session) throw redirect({ to: "/login" });
+    if (!context.session) {
+      throw redirect({ to: "/login" });
+    }
+
+    await context.queryClient.ensureQueryData(
+      context.orpc.incident.list.queryOptions()
+    );
   },
+
+  component: RouteComponent,
 });
 
 function StatCard({
@@ -40,6 +47,7 @@ function StatCard({
         </p>
         <span className="text-lg">{icon}</span>
       </div>
+
       <p
         className={`font-display text-3xl sm:text-4xl leading-none tabular-nums ${
           accent ? "text-brand" : ""
@@ -47,6 +55,7 @@ function StatCard({
       >
         {value}
       </p>
+
       {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
     </div>
   );
@@ -54,14 +63,15 @@ function StatCard({
 
 function RouteComponent() {
   const { session } = Route.useRouteContext();
-  const privateData = useQuery(orpc.privateData.queryOptions());
-  const { list: incidents, isLoading } = useIncidents(orpcForHook);
+
+  const { list: incidents, isLoading, error, isFetching } = useIncidents(orpc);
 
   const firstName = session?.user.name?.split(" ")[0] ?? "vous";
 
   const total = incidents.length;
   const enCours = incidents.filter((i) => i.status === "EN_COURS").length;
   const resolus = incidents.filter((i) => i.status === "RESOLU").length;
+
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const thisWeek = incidents.filter((i) => new Date(i.createdAt) >= oneWeekAgo).length;
 
@@ -100,12 +110,24 @@ function RouteComponent() {
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
           Tableau de bord
         </p>
+
         <h1 className="font-display text-3xl sm:text-4xl leading-tight">
           Bonjour, {firstName}
         </h1>
+
         <p className="mt-1.5 text-sm text-muted-foreground">
           Voici un aperçu de l'activité sur SafeTchad.
         </p>
+
+        {error && incidents.length > 0 && (
+          <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+            Mode hors ligne : affichage des dernières données disponibles.
+          </div>
+        )}
+
+        {isFetching && !error && (
+          <p className="mt-3 text-xs text-muted-foreground">Actualisation…</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -128,7 +150,7 @@ function RouteComponent() {
           label="Résolus"
           value={fmt(resolus)}
           icon=""
-          sub="tous statuts"
+          sub="statut résolu"
           delay="delay-3"
         />
         <StatCard
@@ -152,6 +174,10 @@ function RouteComponent() {
                 <div key={i} className="h-8 rounded-lg bg-muted animate-pulse" />
               ))}
             </div>
+          ) : error && incidents.length === 0 ? (
+            <p className="text-sm text-destructive">
+              Impossible de charger les statistiques.
+            </p>
           ) : topTypes.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aucune donnée</p>
           ) : (
@@ -159,6 +185,7 @@ function RouteComponent() {
               {topTypes.map(([type, count]) => (
                 <div key={type} className="flex items-center gap-3">
                   <span className="text-base w-6 text-center">{TYPE_ICON[type] ?? ""}</span>
+
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-sm font-medium text-foreground">
@@ -168,6 +195,7 @@ function RouteComponent() {
                         {count}
                       </span>
                     </div>
+
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                       <div
                         className="h-full rounded-full bg-brand transition-all duration-500"
@@ -205,12 +233,14 @@ function RouteComponent() {
                 <path d="M12 5v14M5 12h14" />
               </svg>
             </span>
+
             <div>
               <p className="font-medium text-sm text-foreground">Signaler un incident</p>
               <p className="text-xs text-muted-foreground">
                 Ajouter un nouveau signalement
               </p>
             </div>
+
             <svg
               className="ml-auto text-muted-foreground group-hover:text-brand transition-colors shrink-0"
               width="14"
@@ -243,12 +273,14 @@ function RouteComponent() {
                 <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
               </svg>
             </span>
+
             <div>
               <p className="font-medium text-sm text-foreground">Voir les incidents</p>
               <p className="text-xs text-muted-foreground">
                 Parcourir tous les signalements
               </p>
             </div>
+
             <svg
               className="ml-auto text-muted-foreground group-hover:text-brand transition-colors shrink-0"
               width="14"
@@ -264,15 +296,6 @@ function RouteComponent() {
           </Link>
         </div>
       </div>
-
-      {privateData.data?.message && (
-        <div className="animate-fade-up delay-3 rounded-xl border bg-muted/40 px-4 py-3">
-          <p className="text-xs font-mono text-muted-foreground">
-            {privateData.data.message}
-          </p>
-          
-        </div>
-      )}
     </div>
   );
 }

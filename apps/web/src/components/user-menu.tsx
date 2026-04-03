@@ -12,16 +12,25 @@ import {
 import { authClient } from "@/lib/auth-client";
 
 import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
 
 export default function UserMenu() {
   const navigate = useNavigate();
+
+  // Better Auth lit la session utilisateur courante.
+  // C'est probablement ici que part l'appel /api/auth/get-session.
   const { data: session, isPending } = authClient.useSession();
 
+  // Pendant le chargement de session, on garde une largeur stable
+  // pour éviter un effet visuel trop brusque dans le header.
   if (isPending) {
-    return <Skeleton className="h-9 w-24" />;
+    return (
+      <Button variant="outline" disabled className="min-w-[96px]">
+        ...
+      </Button>
+    );
   }
 
+  // Si pas connecté, on affiche le bouton de connexion
   if (!session) {
     return (
       <Link to="/login">
@@ -30,11 +39,13 @@ export default function UserMenu() {
     );
   }
 
+  // Si connecté, on affiche le menu utilisateur
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" />}>
+      <DropdownMenuTrigger render={<Button variant="outline" className="min-w-[96px]" />}>
         {session.user.name}
       </DropdownMenuTrigger>
+
       <DropdownMenuContent className="bg-card">
         <DropdownMenuGroup>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
