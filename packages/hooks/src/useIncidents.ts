@@ -1,8 +1,19 @@
-import { useMutation,useQuery,useQueryClient,type UseMutationResult,type UseQueryResult,
-} from "@tanstack/react-query";
-import { useState } from "react"; // c'est quoi son problème ? 
-import {incidentTypeValues,incidentStatusValues,villeValues,quartierValues,axeRoutierValues,type IncidentType,
-  type IncidentStatus,type Ville,type Quartier,type AxeRoutier,type CreateIncidentInput,} from "@my-better-t-app/api/contracts/incident";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import type { AppOrpcUtils } from "@my-better-t-app/api";
+import {
+  incidentTypeValues,
+  incidentStatusValues,
+  villeValues,
+  quartierValues,
+  axeRoutierValues,
+  type IncidentType,
+  type IncidentStatus,
+  type Ville,
+  type Quartier,
+  type AxeRoutier,
+  type CreateIncidentInput,
+} from "@my-better-t-app/api/contracts/incident";
 
 export const INCIDENT_TYPES = incidentTypeValues;
 export const INCIDENT_STATUSES = incidentStatusValues;
@@ -46,30 +57,19 @@ export type Incident = {
   medias?: IncidentMedia[];
 };
 
-type QueryOptionsLike = {
-  queryKey: readonly unknown[];
-};
+export function useIncidents(orpc: AppOrpcUtils) {
+  const incidentsQuery = useQuery(orpc.incident.list.queryOptions());
 
-type MutationOptionsLike = object;
-
-type IncidentsOrpc = {
-  incident: {
-    list: {
-      queryOptions: () => QueryOptionsLike;
-    };
-    create: {
-      mutationOptions: (options?: {
-        onMutate?: () => void | Promise<void>;
-        onSettled?: () => Promise<void> | void;
-      }) => MutationOptionsLike;
-    };
-    getById: {
-      queryOptions: (options: { input: { id: string } }) => QueryOptionsLike;
-    };
+  return {
+    list: incidentsQuery.data ?? [],
+    isLoading: incidentsQuery.isLoading,
+    error: incidentsQuery.error,
+    refetch: incidentsQuery.refetch,
+    isFetching: incidentsQuery.isFetching,
   };
-};
+}
 
-export function useIncidents(orpc: IncidentsOrpc) {
+export function useCreateIncident(orpc: AppOrpcUtils) {
   const [newIncident, setNewIncident] = useState<CreateIncidentInput>({
     title: "",
     description: "",
@@ -80,52 +80,36 @@ export function useIncidents(orpc: IncidentsOrpc) {
   });
 
   const queryClient = useQueryClient();
-  const incidentsQueryOptions = orpc.incident.list.queryOptions();
 
-  const incidentsQuery = useQuery({
-    ...orpc.incident.list.queryOptions(),
-  }) as UseQueryResult<Incident[], Error>;
+  const createIncidentMutation = useMutation({
+    ...orpc.incident.create.mutationOptions(),
+    onMutate: async () => {
+      const queryKey = orpc.incident.list.queryOptions().queryKey;
 
-  const createIncidentMutation = useMutation(
-    orpc.incident.create.mutationOptions({
-      onMutate: async () => {
-        queryClient.setQueryData<Incident[]>(
-          incidentsQueryOptions.queryKey,
-          (old = []) => [
-            ...old,
-            {
-              id: `temp-${Date.now()}`,
-              title: newIncident.title,
-              description: newIncident.description,
-              type: newIncident.type,
-              status: "EN_COURS",
-              ville: newIncident.ville,
-              quartier: newIncident.quartier,
-              axeRoutier: newIncident.axeRoutier,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              reporterId: "temp-reporter",
-              reporter: undefined,
-              medias: [],
-            },
-          ]
-        );
-      },
-      onSettled: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: incidentsQueryOptions.queryKey,
-        });
-      },
-    }) as never
-  ) as UseMutationResult<Incident, Error, CreateIncidentInput, unknown>;
-
-  const list = incidentsQuery.data ?? [];
-  const isLoading = incidentsQuery.isLoading;
-  const error = incidentsQuery.error;
-  const refetch = incidentsQuery.refetch;
-
-  const isCreating = createIncidentMutation.isPending;
-  const createError = createIncidentMutation.error;
+      queryClient.setQueryData<Incident[]>(queryKey, (old = []) => [
+        ...old,
+        {
+          id: `temp-${Date.now()}`,
+          title: newIncident.title,   
+          description: newIncident.description,
+          type: newIncident.type,
+          status: "EN_COURS",
+          ville: newIncident.ville,
+          quartier: newIncident.quartier,
+          axeRoutier: newIncident.axeRoutier,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          reporterId: "temp",
+          medias: [],
+        },
+      ]);
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: orpc.incident.list.queryOptions().queryKey,
+      });
+    },
+  });
 
   function create() {
     createIncidentMutation.mutate(newIncident);
@@ -134,35 +118,25 @@ export function useIncidents(orpc: IncidentsOrpc) {
   return {
     newIncident,
     setNewIncident,
-
-    list,
-    isLoading,
-    error,
-    refetch,
-
     create,
-    isCreating,
-    createError,
+    isCreating: createIncidentMutation.isPending,
+    createError: createIncidentMutation.error,
   };
 }
 
-export function useIncidentById(orpc: IncidentsOrpc, id: string) {
-  const incidentQuery = useQuery({
-    ...orpc.incident.getById.queryOptions({
+export function useIncidentById(orpc: AppOrpcUtils, id: string) {
+  const incidentQuery = useQuery(
+    orpc.incident.getById.queryOptions({
       input: { id },
-    }),
-    enabled: !!id,
-  }) as UseQueryResult<Incident, Error>;
-
-  const incident = incidentQuery.data ?? null;
-  const isLoading = incidentQuery.isLoading;
-  const error = incidentQuery.error;
-  const refetch = incidentQuery.refetch;
+    })
+  );
 
   return {
-    incident,
-    isLoading,
-    error,
-    refetch,
+    incident: incidentQuery.data ?? null,
+    isLoading: incidentQuery.isLoading,
+    error: incidentQuery.error,
+    refetch: incidentQuery.refetch,
+    isFetching: incidentQuery.isFetching,
   };
 }
+
