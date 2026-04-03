@@ -7,7 +7,7 @@ catalog:
   '@orpc/client': ^1.12.2
   '@orpc/openapi': ^1.12.2
   '@orpc/server': ^1.12.2
-  '@orpc/tanstack-query': ^1.12.2
+  '@orpc/tanstack-query': ^1.13.6
   '@orpc/zod': ^1.12.2
   '@prisma/client': ^7.2.0
   '@tanstack/react-form': ^1.28.0
