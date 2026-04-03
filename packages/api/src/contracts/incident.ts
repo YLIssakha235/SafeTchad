@@ -52,3 +52,35 @@ export type Quartier = z.infer<typeof quartierSchema>;
 export type AxeRoutier = z.infer<typeof axeRoutierSchema>;
 export type CreateIncidentInput = z.infer<typeof createIncidentSchema>;
 export type GetIncidentByIdInput = z.infer<typeof getIncidentByIdSchema>;
+
+export type IncidentReporter = {
+  id: string;
+  name: string | null;
+  email: string;
+  image?: string | null;
+};
+
+export type IncidentMedia = {
+  id: string;
+  url: string;
+  filename: string;
+  mimeType: string;
+  mediaType: "IMAGE" | "VIDEO";
+  createdAt: string | Date;
+};
+
+export type Incident = {
+  id: string;
+  title: string;
+  description: string;
+  type: IncidentType;
+  status: IncidentStatus;
+  ville: Ville;
+  quartier: Quartier;
+  axeRoutier: AxeRoutier;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  reporterId: string;
+  reporter?: IncidentReporter;
+  medias?: IncidentMedia[];
+};
