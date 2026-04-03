@@ -7,12 +7,8 @@ import {
   villeValues,
   quartierValues,
   axeRoutierValues,
-  type IncidentType,
-  type IncidentStatus,
-  type Ville,
-  type Quartier,
-  type AxeRoutier,
   type CreateIncidentInput,
+  type Incident,
 } from "@my-better-t-app/api/contracts/incident";
 
 export const INCIDENT_TYPES = incidentTypeValues;
@@ -24,38 +20,6 @@ export const AXES_ROUTIERS = axeRoutierValues;
 export function formatLabel(value: string): string {
   return value.replace(/_/g, " ");
 }
-
-export type IncidentReporter = {
-  id: string;
-  name: string;
-  email: string;
-  image?: string | null;
-};
-
-export type IncidentMedia = {
-  id: string;
-  url: string;
-  filename: string;
-  mimeType: string;
-  mediaType: "IMAGE" | "VIDEO";
-  createdAt: string | Date;
-};
-
-export type Incident = {
-  id: string;
-  title: string;
-  description: string;
-  type: IncidentType;
-  status: IncidentStatus;
-  ville: Ville;
-  quartier: Quartier;
-  axeRoutier: AxeRoutier;
-  createdAt: string | Date;
-  updatedAt: string | Date;
-  reporterId: string;
-  reporter?: IncidentReporter;
-  medias?: IncidentMedia[];
-};
 
 export function useIncidents(orpc: AppOrpcUtils) {
   const incidentsQuery = useQuery(orpc.incident.list.queryOptions());
@@ -80,17 +44,20 @@ export function useCreateIncident(orpc: AppOrpcUtils) {
   });
 
   const queryClient = useQueryClient();
+  const listQueryOptions = orpc.incident.list.queryOptions();
 
   const createIncidentMutation = useMutation({
     ...orpc.incident.create.mutationOptions(),
     onMutate: async () => {
-      const queryKey = orpc.incident.list.queryOptions().queryKey;
+      await queryClient.cancelQueries({
+        queryKey: listQueryOptions.queryKey,
+      });
 
-      queryClient.setQueryData<Incident[]>(queryKey, (old = []) => [
+      queryClient.setQueryData<Incident[]>(listQueryOptions.queryKey, (old = []) => [
         ...old,
         {
           id: `temp-${Date.now()}`,
-          title: newIncident.title,   
+          title: newIncident.title,
           description: newIncident.description,
           type: newIncident.type,
           status: "EN_COURS",
@@ -106,7 +73,7 @@ export function useCreateIncident(orpc: AppOrpcUtils) {
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({
-        queryKey: orpc.incident.list.queryOptions().queryKey,
+        queryKey: listQueryOptions.queryKey,
       });
     },
   });
@@ -115,10 +82,15 @@ export function useCreateIncident(orpc: AppOrpcUtils) {
     createIncidentMutation.mutate(newIncident);
   }
 
+  async function createAsync() {
+    return createIncidentMutation.mutateAsync(newIncident);
+  }
+
   return {
     newIncident,
     setNewIncident,
     create,
+    createAsync,
     isCreating: createIncidentMutation.isPending,
     createError: createIncidentMutation.error,
   };
@@ -139,4 +111,3 @@ export function useIncidentById(orpc: AppOrpcUtils, id: string) {
     isFetching: incidentQuery.isFetching,
   };
 }
-
