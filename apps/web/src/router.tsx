@@ -11,6 +11,8 @@ export const getRouter = () => {
   const router = createTanStackRouter({
     routeTree,
 
+    defaultPreload: "render", // précharge au moment du rendu (par défaut, c'est "intent" qui précharge au moment de l'intention de navigation)
+
     // Garde la position de scroll lors des navigations quand c'est possible
     scrollRestoration: true,
 
