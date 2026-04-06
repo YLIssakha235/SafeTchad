@@ -18,7 +18,13 @@ export function formatLabel(value: string): string {
  return value.replace(/_/g, " ");
 }
 export function useIncidents(orpc: AppOrpcUtils) {
- const incidentsQuery = useQuery(orpc.incident.list.queryOptions());
+ const incidentsQuery = useQuery({
+  ...orpc.incident.list.queryOptions(),
+  networkMode: "offlineFirst",
+  retry: false,
+  refetchOnWindowFocus: false,
+ });
+
  return {
    list: incidentsQuery.data ?? [],
    isLoading: incidentsQuery.isLoading,
@@ -27,6 +33,7 @@ export function useIncidents(orpc: AppOrpcUtils) {
    isFetching: incidentsQuery.isFetching,
  };
 }
+
 export function useCreateIncident(orpc: AppOrpcUtils) {
  const queryClient = useQueryClient();
  const listQueryOptions = orpc.incident.list.queryOptions();
@@ -63,7 +70,7 @@ export function useCreateIncident(orpc: AppOrpcUtils) {
   //      queryClient.setQueryData(listQueryOptions.queryKey, context.previousIncidents);
   //    }
   //  },
-
+  
    onSettled: async () => {
      await queryClient.invalidateQueries({
        queryKey: listQueryOptions.queryKey,
@@ -84,11 +91,14 @@ export function useCreateIncident(orpc: AppOrpcUtils) {
  };
 }
 export function useIncidentById(orpc: AppOrpcUtils, id: string) {
- const incidentQuery = useQuery(
-   orpc.incident.getById.queryOptions({
+ const incidentQuery = useQuery({
+   ...orpc.incident.getById.queryOptions({
      input: { id },
    }),
- );
+    networkMode: "offlineFirst",
+    retry: false,
+    refetchOnWindowFocus: false,
+ });
  return {
    incident: incidentQuery.data ?? null,
    isLoading: incidentQuery.isLoading,
