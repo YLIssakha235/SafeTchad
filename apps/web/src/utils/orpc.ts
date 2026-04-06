@@ -17,6 +17,21 @@ export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     // Si une query échoue, on affiche un toast d'erreur
     onError: (error, query) => {
+      const message = 
+        error instanceof Error ? error.message : String(error);
+      
+      const isOfflineError =
+        typeof navigator !== "undefined" && !navigator.onLine &&
+        (
+          message.includes("NetworkError") ||
+          message.includes("Failed to fetch") ||
+          message.includes("Network request failed")  
+        );
+
+      if (isOfflineError){
+        return;
+      }
+
       toast.error(`Error: ${error.message}`, {
         action: {
           label: "retry",
@@ -40,10 +55,10 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
 
       // Si le réseau revient, React Query peut relancer la query
-      refetchOnReconnect: true,
+      refetchOnReconnect: false,
 
       // Quand on remonte une page, on ne veut pas forcément refetch les données
-      refetchOnMount: true,
+      refetchOnMount: false,
     },
     mutations: {
       retry: 0,
