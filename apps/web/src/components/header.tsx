@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import UserMenu from "./user-menu";
-import { Menu, MenuIcon } from "lucide-react";
+import { MenuIcon } from "lucide-react";
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
 function useTheme() {

@@ -1,13 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { useIncidents, formatLabel } from "@my-better-t-app/hooks";
 import type { IncidentType, IncidentStatus } from "@my-better-t-app/api/contracts/incident";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/incidents/")({
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(
-      context.orpc.incident.list.queryOptions()
-    );
+    try {
+      await context.queryClient.ensureQueryData(
+        context.orpc.incident.list.queryOptions()
+      );
+    } catch {
+      // offline ou erreur réseau :
+      // on laisse le composant utiliser le cache éventuel
+    }
   },
   component: RouteComponent,
 });
@@ -61,12 +67,61 @@ function SkeletonCard() {
   );
 }
 
+function controlClass() {
+  return "rounded-lg border bg-background px-3 py-2 text-sm text-foreground";
+}
+
 function RouteComponent() {
   const { list: incidents, isLoading, error, isFetching } = useIncidents(orpc);
   const hasIncidents = incidents.length > 0;
 
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"TOUS" | IncidentStatus>("TOUS");
+  const [typeFilter, setTypeFilter] = useState<"TOUS" | IncidentType>("TOUS");
+  const [sortOrder, setSortOrder] = useState<"RECENT" | "ANCIEN">("RECENT");
+
+  const filteredIncidents = useMemo(() => {
+    let result = [...incidents];
+
+    if (statusFilter !== "TOUS") {
+      result = result.filter((incident) => incident.status === statusFilter);
+    }
+
+    if (typeFilter !== "TOUS") {
+      result = result.filter((incident) => incident.type === typeFilter);
+    }
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter((incident) => {
+        const title = incident.title?.toLowerCase() ?? "";
+        const description = incident.description?.toLowerCase() ?? "";
+        const quartier = incident.quartier?.toLowerCase() ?? "";
+        const axe = incident.axeRoutier?.toLowerCase() ?? "";
+        return (
+          title.includes(q) ||
+          description.includes(q) ||
+          quartier.includes(q) ||
+          axe.includes(q)
+        );
+      });
+    }
+
+    result.sort((a, b) => {
+      const da = new Date(a.createdAt).getTime();
+      const db = new Date(b.createdAt).getTime();
+      return sortOrder === "RECENT" ? db - da : da - db;
+    });
+
+    return result;
+  }, [incidents, search, statusFilter, typeFilter, sortOrder]);
+
+  const enCoursCount = incidents.filter((i) => i.status === "EN_COURS").length;
+  const resoluCount = incidents.filter((i) => i.status === "RESOLU").length;
+  const annuleCount = incidents.filter((i) => i.status === "ANNULE").length;
+
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-10 space-y-8">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 sm:py-10 space-y-8">
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
@@ -76,7 +131,7 @@ function RouteComponent() {
             Incidents
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Signalements récents de la communauté
+            Suivi des signalements récents de la communauté
           </p>
         </div>
 
@@ -92,16 +147,78 @@ function RouteComponent() {
       </div>
 
       {!isLoading && hasIncidents && (
-        <div className="animate-fade-up delay-1 flex items-center gap-3 flex-wrap">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted px-3 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand inline-block" />
-            {incidents.length} incident{incidents.length !== 1 ? "s" : ""}
-          </span>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-up delay-1">
+            <div className="rounded-xl border bg-card p-4">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">En cours</p>
+              <p className="font-display text-3xl">{enCoursCount}</p>
+            </div>
+            <div className="rounded-xl border bg-card p-4">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Résolus</p>
+              <p className="font-display text-3xl">{resoluCount}</p>
+            </div>
+            <div className="rounded-xl border bg-card p-4">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Annulés</p>
+              <p className="font-display text-3xl">{annuleCount}</p>
+            </div>
+          </div>
 
-          {isFetching && !error && (
-            <span className="text-xs text-muted-foreground">Actualisation…</span>
-          )}
-        </div>
+          <div className="rounded-xl border bg-card p-4 sm:p-5 space-y-4 animate-fade-up delay-1">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <p className="text-sm font-medium text-foreground">Recherche et filtres</p>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted px-3 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand inline-block" />
+                {filteredIncidents.length} résultat{filteredIncidents.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+              <input
+                className={controlClass()}
+                placeholder="Rechercher un incident…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+
+              <select
+                className={controlClass()}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as "TOUS" | IncidentStatus)}
+              >
+                <option value="TOUS">Tous les statuts</option>
+                <option value="EN_COURS">En cours</option>
+                <option value="RESOLU">Résolu</option>
+                <option value="ANNULE">Annulé</option>
+              </select>
+
+              <select
+                className={controlClass()}
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as "TOUS" | IncidentType)}
+              >
+                <option value="TOUS">Tous les types</option>
+                {Object.entries(TYPE_CONFIG).map(([value, config]) => (
+                  <option key={value} value={value}>
+                    {config.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className={controlClass()}
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as "RECENT" | "ANCIEN")}
+              >
+                <option value="RECENT">Plus récents</option>
+                <option value="ANCIEN">Plus anciens</option>
+              </select>
+            </div>
+
+            {isFetching && !error && (
+              <p className="text-xs text-muted-foreground">Actualisation…</p>
+            )}
+          </div>
+        </>
       )}
 
       {error && hasIncidents && (
@@ -134,9 +251,19 @@ function RouteComponent() {
         </div>
       )}
 
-      {hasIncidents && (
+      {hasIncidents && filteredIncidents.length === 0 && (
+        <div className="rounded-xl border bg-card p-12 text-center animate-fade-up">
+          <p className="text-3xl mb-3">🔎</p>
+          <p className="font-medium text-foreground">Aucun incident ne correspond à vos filtres</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Essayez un autre type, statut ou mot-clé.
+          </p>
+        </div>
+      )}
+
+      {filteredIncidents.length > 0 && (
         <div className="space-y-3">
-          {incidents.map((incident, i) => {
+          {filteredIncidents.map((incident, i) => {
             const type = TYPE_CONFIG[incident.type] ?? {
               label: incident.type,
               color: "text-muted-foreground",
