@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import prisma from "@my-better-t-app/db";
-import {createIncidentSchema, getIncidentByIdSchema,
+import {createIncidentSchema, getIncidentByIdSchema, updateIncidentStatusSchema
 } from "../contracts/incident";
 import { publicProcedure, protectedProcedure } from "../index";
 
@@ -58,5 +58,23 @@ export const incidentRouter = {
 
       return incident;
     }),
-};
 
+  updateStatus: protectedProcedure
+    .input(updateIncidentStatusSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session?.user?.id;
+
+      if (!userId) {
+        throw new ORPCError("UNAUTHORIZED");
+      }
+
+      return prisma.incident.update({
+        where: { id: input.id },
+        data: { status: input.status },
+        include: {
+          reporter: true,
+          medias: true,
+        },
+      });
+    }),
+};

@@ -34,7 +34,7 @@ export const axeRoutierSchema = z.enum(axeRoutierValues);
 
 export const createIncidentSchema = z.object({
   title: z.string().min(1),
-  description: z.string().min(1),
+  description: z.string().optional().default(""),
   type: incidentTypeSchema,
   ville: villeSchema,
   quartier: quartierSchema,
@@ -84,3 +84,10 @@ export type Incident = {
   reporter?: IncidentReporter;
   medias?: IncidentMedia[];
 };
+
+export const updateIncidentStatusSchema = z.object({
+  id: z.string().min(1),
+  status: incidentStatusSchema,
+});
+
+export type UpdateIncidentStatusInput = z.infer<typeof updateIncidentStatusSchema>;
