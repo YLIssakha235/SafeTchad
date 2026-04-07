@@ -72,7 +72,9 @@ function controlClass() {
 }
 
 function RouteComponent() {
-  const { list: incidents, isLoading, error, isFetching } = useIncidents(orpc);
+  const { list } = useIncidents(orpc);
+  const incidents = list.data;
+  const { isLoading, error, isFetching } = list;
   const hasIncidents = incidents.length > 0;
 
   const [search, setSearch] = useState("");

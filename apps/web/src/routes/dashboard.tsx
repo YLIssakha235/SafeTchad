@@ -82,7 +82,10 @@ function formatDate(date: string | Date) {
 
 function RouteComponent() {
   const { session } = Route.useRouteContext();
-  const { list: incidents, isLoading, error, isFetching } = useIncidents(orpc);
+  const { list } = useIncidents(orpc);
+  const incidents = list.data;
+  const { isLoading, error, isFetching } = list;
+
 
   const firstName = session?.user.name?.split(" ")[0] ?? "vous";
 

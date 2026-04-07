@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { orpc } from "@/utils/orpc";
-import { formatLabel, useIncidentById } from "@my-better-t-app/hooks";
+import { formatLabel, useIncidents } from "@my-better-t-app/hooks";
 import type { IncidentStatus } from "@my-better-t-app/api/contracts/incident";
 
 export const Route = createFileRoute("/incidents/$incidentId")({
@@ -50,7 +50,9 @@ function RouteComponent() {
   const [isOnline, setIsOnline] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
 
-  const { incident, isLoading, error, isFetching } = useIncidentById(orpc, incidentId);
+  const { detail} = useIncidents(orpc, incidentId);
+  const { incident, isLoading, error, isFetching } = detail;
+
 
   const updateStatusMutation = useMutation(
     orpc.incident.updateStatus.mutationOptions({

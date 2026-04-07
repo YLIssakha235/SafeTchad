@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AXES_ROUTIERS, INCIDENT_TYPES, QUARTIERS, VILLES, formatLabel, useCreateIncident } from "@my-better-t-app/hooks";
+import { AXES_ROUTIERS, INCIDENT_TYPES, QUARTIERS, VILLES, formatLabel, useIncidents } from "@my-better-t-app/hooks";
 import type { AxeRoutier, IncidentType, Quartier, Ville } from "@my-better-t-app/api/contracts/incident";
 import { orpc } from "@/utils/orpc";
 
@@ -40,7 +40,9 @@ function RouteComponent() {
     refetchOnWindowFocus: false,
   });
 
-  const { createAsync, isCreating, createError } = useCreateIncident(orpc);
+  const { create } = useIncidents(orpc);
+  const { mutateAsync: createAsync, isLoading: isCreating, error: createError } = create;
+ 
 
   useEffect(() => {
     setIsOnline(window.navigator.onLine);
