@@ -13,7 +13,7 @@ services:
       postgres:
         condition: service_healthy
     volumes: 
-      - ./uploads:/apps/web/public/uploads
+      - ./apps/web/public/uploads:/apps/web/public/uploads
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/my-better-t-app
       - BETTER_AUTH_SECRET=etihbDoDbmmxzb96cdn99ZbZHEMBX6jb
