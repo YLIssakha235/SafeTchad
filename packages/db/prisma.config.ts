@@ -7,6 +7,9 @@ import { defineConfig } from "prisma/config";
 // });
 
 // chargmeent automatique .env (docker local )
+
+dotenv.config({ path: path.join(__dirname, "../../apps/web/.env") });
+
 dotenv.config();
 
 export default defineConfig({
@@ -15,6 +18,6 @@ export default defineConfig({
     path: path.join("prisma", "migrations"),
   },
   datasource: {
-    url: process.env.DATABASE_URL!, // Assurez-vous que DATABASE_URL est défini dans votre fichier .env
+    url: process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/my-better-t-app", //
   },
 });
