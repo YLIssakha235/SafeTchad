@@ -6,6 +6,14 @@ services:
       context: .
     ports:
       - "3001:3001"
+    command: >
+      sh -c "pnpm --filter @my-better-t-app/db db:push && pnpm --filter web dev"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes: 
+      - ./uploads:/apps/web/public/uploads
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/my-better-t-app
       - BETTER_AUTH_SECRET=etihbDoDbmmxzb96cdn99ZbZHEMBX6jb
