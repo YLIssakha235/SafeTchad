@@ -6,3 +6,5 @@ COPY . /usr/src/app
 WORKDIR /usr/src/app
 
 RUN --mount=type=cache,target=/root/.pnpm-store pnpm install --frozen-lockfile
+
+CMD ["pnpm", "--filter", "web", "dev"]

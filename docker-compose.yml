@@ -1,16 +1,17 @@
 name: my-better-t-app
 
 services:
-
   web:
-    build: 
+    build:
       context: .
     ports:
       - "3001:3001"
-    restart: unless-stopped
     environment:
-      - DATABASE_URL = postgresql://postgres:password@postgres:5432/my-better-t-app
-      
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/my-better-t-app
+      - BETTER_AUTH_SECRET=etihbDoDbmmxzb96cdn99ZbZHEMBX6jb
+      - BETTER_AUTH_URL=http://localhost:3001
+      - CORS_ORIGIN=http://localhost:3001
+    restart: unless-stopped
 
   postgres:
     image: postgres:16
@@ -22,7 +23,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - my-better-t-app_postgres_data:/var/lib/postgresql
+      - my-better-t-app_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
