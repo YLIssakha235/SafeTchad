@@ -39,6 +39,10 @@ export const createIncidentSchema = z.object({
   ville: villeSchema,
   quartier: quartierSchema,
   axeRoutier: axeRoutierSchema,
+
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  locationAccuracy: z.number().optional(),
 });
 
 export const getIncidentByIdSchema = z.object({
@@ -78,6 +82,11 @@ export type Incident = {
   ville: Ville;
   quartier: Quartier;
   axeRoutier: AxeRoutier;
+
+  latitude?: number | null;
+  longitude?: number | null;
+  locationAccuracy?: number | null;
+
   createdAt: string | Date;
   updatedAt: string | Date;
   reporterId: string;

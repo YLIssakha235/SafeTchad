@@ -45,6 +45,10 @@ model Incident {
   quartier    Quartier
   axeRoutier  AxeRoutier
 
+  latitude    Float?
+  longitude   Float?
+  locationAccuracy Float?
+
   reporterId  String
   reporter    User           @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 

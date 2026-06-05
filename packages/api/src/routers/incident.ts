@@ -22,6 +22,11 @@ export const incidentRouter = {
           ville: input.ville,
           quartier: input.quartier,
           axeRoutier: input.axeRoutier,
+
+          latitude: input.latitude,
+          longitude: input.longitude,
+          locationAccuracy: input.locationAccuracy,
+
           reporterId: userId,
         },
         include: {
@@ -60,21 +65,76 @@ export const incidentRouter = {
     }),
 
   updateStatus: protectedProcedure
-    .input(updateIncidentStatusSchema)
-    .handler(async ({ input, context }) => {
-      const userId = context.session?.user?.id;
+  .input(updateIncidentStatusSchema)
+  .handler(async ({ input, context }) => {
+    const userId = context.session?.user?.id;
 
-      if (!userId) {
-        throw new ORPCError("UNAUTHORIZED");
-      }
+    if (!userId) {
+      throw new ORPCError("UNAUTHORIZED");
+    }
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      throw new ORPCError("UNAUTHORIZED");
+    }
+
+    const incident = await prisma.incident.findUnique({
+      where: { id: input.id },
+      select: {
+        id: true,
+        reporterId: true,
+        status: true,
+      },
+    });
+
+    if (!incident) {
+      throw new ORPCError("NOT_FOUND");
+    }
+
+    const isAdmin = user.role === "ADMIN";
+    const isOwner = incident.reporterId === user.id;
+
+    if (isAdmin) {
       return prisma.incident.update({
         where: { id: input.id },
-        data: { status: input.status },
+        data: {
+          status: input.status,
+        },
         include: {
           reporter: true,
           medias: true,
         },
       });
-    }),
+    }
+
+    if (!isOwner) {
+      throw new ORPCError("FORBIDDEN");
+    }
+
+    if (input.status !== "ANNULE") {
+      throw new ORPCError("FORBIDDEN");
+    }
+
+    if (incident.status === "RESOLU") {
+      throw new ORPCError("BAD_REQUEST");
+    }
+
+    return prisma.incident.update({
+      where: { id: input.id },
+      data: {
+        status: "ANNULE",
+      },
+      include: {
+        reporter: true,
+        medias: true,
+      },
+    });
+  }),
 };
