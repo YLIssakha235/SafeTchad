@@ -2,16 +2,14 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import UserMenu from "./user-menu";
 import { MenuIcon } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
-// ── Theme toggle ──────────────────────────────────────────────────────────────
 function useTheme() {
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") return "dark";
     return (
       (localStorage.getItem("st-theme") as "light" | "dark") ??
-      (window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light")
+      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
     );
   });
 
@@ -24,7 +22,6 @@ function useTheme() {
   return { theme, toggle: () => setTheme((t) => (t === "dark" ? "light" : "dark")) };
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
 function SunIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -50,32 +47,29 @@ function ShieldIcon() {
   );
 }
 
-function CloseIcon(){
+function CloseIcon() {
   return (
-    <svg width ="18" height="18" viewBox="0 0 24 24" fill= "none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 6L6 18M6 6l12 12"/>
     </svg>
   );
 }
 
-
-// ── Nav links config ──────────────────────────────────────────────────────────
-const NAV_LINKS = [
-  { to: "/", label: "Accueil" },
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/incidents", label: "Incidents" },
-] as const;
-
-// ── Header ────────────────────────────────────────────────────────────────────
 export default function Header() {
   const { theme, toggle } = useTheme();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
-  // ajout pour mobile menu
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session } = authClient.useSession();
+  const isAdmin = session?.user.role === "ADMIN";
+
+  const NAV_LINKS = [
+    { to: "/", label: "Accueil" },
+    ...(isAdmin ? [{ to: "/dashboard", label: "Dashboard" }] : []),
+    { to: "/incidents", label: "Incidents" },
+  ] as const;
 
   useEffect(() => {
-    // Ferme le menu mobile à chaque changement de route
     setMobileOpen(false);
   }, [currentPath]);
 
@@ -96,19 +90,14 @@ export default function Header() {
         {/* Nav */}
         <nav className="hidden sm:flex items-center gap-1 bg-muted rounded-full px-1.5 py-1.5">
           {NAV_LINKS.map(({ to, label }) => {
-            const isActive =
-              to === "/"
-                ? currentPath === "/"
-                : currentPath.startsWith(to);
+            const isActive = to === "/" ? currentPath === "/" : currentPath.startsWith(to);
             return (
               <Link
                 key={to}
                 to={to}
                 className={[
                   "px-4 py-1 rounded-full text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                  isActive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                 ].join(" ")}
               >
                 {label}
@@ -119,7 +108,6 @@ export default function Header() {
 
         {/* Right side */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Signaler CTA */}
           <Link
             to="/incidents/create"
             className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand text-white text-sm font-medium hover:opacity-90 transition-opacity"
@@ -130,7 +118,6 @@ export default function Header() {
             Signaler
           </Link>
 
-          {/* Theme toggle */}
           <button
             onClick={toggle}
             aria-label="Changer le thème"
@@ -139,15 +126,13 @@ export default function Header() {
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
           </button>
 
-            {/* Mobile menu toggle */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="Ouvrir le menu"
             className="sm:hidden w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
-            >
+          >
             {mobileOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
-
 
           <UserMenu />
         </div>
@@ -156,21 +141,16 @@ export default function Header() {
       {/* Mobile nav */}
       {mobileOpen && (
         <div className="sm:hidden border-t border-border bg-background/95 backdrop-blur-md">
-          <div className= "mx-auto max-w-6xl px-4 py-4 flex flex-col gap-2">
+          <div className="mx-auto max-w-6xl px-4 py-4 flex flex-col gap-2">
             {NAV_LINKS.map(({ to, label }) => {
-              const isActive =
-                to === "/"
-                  ? currentPath === "/"
-                  : currentPath.startsWith(to);
+              const isActive = to === "/" ? currentPath === "/" : currentPath.startsWith(to);
               return (
                 <Link
                   key={to}
                   to={to}
                   className={[
                     "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-accent text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                    isActive ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
                   ].join(" ")}
                 >
                   {label}
@@ -189,8 +169,7 @@ export default function Header() {
             </Link>
           </div>
         </div>
-    )}
-  </header>
-
+      )}
+    </header>
   );
 }

@@ -9,10 +9,19 @@ import type { IncidentType } from "@my-better-t-app/api/contracts/incident";
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
     try{
-    const session = await getUser();
+      const session = await getUser();
+      if (!session) {
+        throw redirect({ to: "/login" });
+      }
+
+      if (session.user.role !== "ADMIN") {
+        throw redirect({ to: "/incidents" });
+      }
+
     return { session };
-  } catch {
-      return { session: null };
+  } catch (e) {
+      if (e instanceof Response) throw e;
+      throw redirect({ to: "/login" });
     }
   },
 
@@ -82,6 +91,8 @@ function formatDate(date: string | Date) {
 
 function RouteComponent() {
   const { session } = Route.useRouteContext();
+  
+
   const { list } = useIncidents(orpc);
   const incidents = list.data;
   const { isLoading, error, isFetching } = list;

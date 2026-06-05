@@ -1,8 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+//import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+//import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import type { orpc } from "@/utils/orpc";
 
@@ -28,6 +28,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       {
         title: "SafeTchad",
       },
+
     ],
     links: [
       {
@@ -52,8 +53,12 @@ function RootDocument() {
           <Outlet />
         </div>
         <Toaster richColors />
-        <TanStackRouterDevtools position="bottom-left" />
-        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+        
+        {/* Devtools désactivés pour la démo, à réactiver pour le développement */}
+        {/*<TanStackRouterDevtools position="bottom-left" /> */}
+        {/*<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />*/}  
+        {/* <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" /> */}
+
         <Scripts />
       </body>
     </html>
