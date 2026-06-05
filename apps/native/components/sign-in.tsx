@@ -1,39 +1,38 @@
 import { useForm } from "@tanstack/react-form";
-import {
-  Button,
-  FieldError,
-  Input,
-  Label,
-  Spinner,
-  Surface,
-  TextField,
-  useToast,
-} from "heroui-native";
 import { useRef } from "react";
-import { Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import z from "zod";
 
 import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/utils/orpc";
 
 const signInSchema = z.object({
-  email: z.string().trim().min(1, "Email is required").email("Enter a valid email address"),
-  password: z.string().min(1, "Password is required").min(8, "Use at least 8 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
 });
 
 function getErrorMessage(error: unknown): string | null {
   if (!error) return null;
 
-  if (typeof error === "string") {
-    return error;
-  }
+  if (typeof error === "string") return error;
 
   if (Array.isArray(error)) {
     for (const issue of error) {
       const message = getErrorMessage(issue);
-      if (message) {
-        return message;
-      }
+      if (message) return message;
     }
     return null;
   }
@@ -48,9 +47,8 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-function SignIn() {
+function SignIn({ onSuccess }: { onSuccess?: () => void }) {
   const passwordInputRef = useRef<TextInput>(null);
-  const { toast } = useToast();
 
   const form = useForm({
     defaultValues: {
@@ -68,27 +66,24 @@ function SignIn() {
         },
         {
           onError(error) {
-            toast.show({
-              variant: "danger",
-              label: error.error?.message || "Failed to sign in",
-            });
+            //console.error(error.error?.message || "Failed to sign in");
+            console.error("FULL ERROR:", JSON.stringify(error));
           },
           onSuccess() {
             formApi.reset();
-            toast.show({
-              variant: "success",
-              label: "Signed in successfully",
-            });
             queryClient.refetchQueries();
+            onSuccess?.();
           },
-        },
+        }
       );
     },
   });
 
   return (
-    <Surface variant="secondary" className="p-4 rounded-lg">
-      <Text className="text-foreground font-medium mb-4">Sign In</Text>
+    <View>
+      <Text className="mb-4 text-lg font-bold text-card-foreground">
+        Sign In
+      </Text>
 
       <form.Subscribe
         selector={(state) => ({
@@ -96,72 +91,82 @@ function SignIn() {
           validationError: getErrorMessage(state.errorMap.onSubmit),
         })}
       >
-        {({ isSubmitting, validationError }) => {
-          const formError = validationError;
-
-          return (
-            <>
-              <FieldError isInvalid={!!formError} className="mb-3">
-                {formError}
-              </FieldError>
-
-              <View className="gap-3">
-                <form.Field name="email">
-                  {(field) => (
-                    <TextField>
-                      <Label>Email</Label>
-                      <Input
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={field.handleChange}
-                        placeholder="email@example.com"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoComplete="email"
-                        textContentType="emailAddress"
-                        returnKeyType="next"
-                        blurOnSubmit={false}
-                        onSubmitEditing={() => {
-                          passwordInputRef.current?.focus();
-                        }}
-                      />
-                    </TextField>
-                  )}
-                </form.Field>
-
-                <form.Field name="password">
-                  {(field) => (
-                    <TextField>
-                      <Label>Password</Label>
-                      <Input
-                        ref={passwordInputRef}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={field.handleChange}
-                        placeholder="••••••••"
-                        secureTextEntry
-                        autoComplete="password"
-                        textContentType="password"
-                        returnKeyType="go"
-                        onSubmitEditing={form.handleSubmit}
-                      />
-                    </TextField>
-                  )}
-                </form.Field>
-
-                <Button onPress={form.handleSubmit} isDisabled={isSubmitting} className="mt-1">
-                  {isSubmitting ? (
-                    <Spinner size="sm" color="default" />
-                  ) : (
-                    <Button.Label>Sign In</Button.Label>
-                  )}
-                </Button>
+        {({ isSubmitting, validationError }) => (
+          <View className="gap-4">
+            {validationError && (
+              <View className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3">
+                <Text className="text-sm text-red-500">
+                  {validationError}
+                </Text>
               </View>
-            </>
-          );
-        }}
+            )}
+
+            <form.Field name="email">
+              {(field) => (
+                <View>
+                  <Text className="mb-2 text-sm font-semibold text-card-foreground">
+                    Email
+                  </Text>
+
+                  <TextInput
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={field.handleChange}
+                    placeholder="email@example.com"
+                    placeholderTextColor="#777780"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => passwordInputRef.current?.focus()}
+                    className="rounded-2xl border border-border bg-background px-4 py-3 text-foreground"
+                  />
+                </View>
+              )}
+            </form.Field>
+
+            <form.Field name="password">
+              {(field) => (
+                <View>
+                  <Text className="mb-2 text-sm font-semibold text-card-foreground">
+                    Password
+                  </Text>
+
+                  <TextInput
+                    ref={passwordInputRef}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={field.handleChange}
+                    placeholder="••••••••"
+                    placeholderTextColor="#777780"
+                    secureTextEntry
+                    autoComplete="password"
+                    textContentType="password"
+                    returnKeyType="go"
+                    onSubmitEditing={form.handleSubmit}
+                    className="rounded-2xl border border-border bg-background px-4 py-3 text-foreground"
+                  />
+                </View>
+              )}
+            </form.Field>
+
+            <Pressable
+              onPress={form.handleSubmit}
+              disabled={isSubmitting}
+              className="mt-1 items-center rounded-3xl bg-brand p-4 active:opacity-80 disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <ActivityIndicator />
+              ) : (
+                <Text className="font-bold text-white">Sign In</Text>
+              )}
+            </Pressable>
+          </View>
+        )}
       </form.Subscribe>
-    </Surface>
+    </View>
   );
 }
 

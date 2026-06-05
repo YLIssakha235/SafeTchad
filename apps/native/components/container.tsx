@@ -1,6 +1,10 @@
-import { cn } from "heroui-native";
 import { type PropsWithChildren } from "react";
-import { ScrollView, View, type ScrollViewProps, type ViewProps } from "react-native";
+import {
+  ScrollView,
+  View,
+  type ScrollViewProps,
+  type ViewProps,
+} from "react-native";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -11,6 +15,10 @@ type Props = AnimatedProps<ViewProps> & {
   isScrollable?: boolean;
   scrollViewProps?: Omit<ScrollViewProps, "contentContainerStyle">;
 };
+
+function cn(...classes: Array<string | undefined | false | null>) {
+  return classes.filter(Boolean).join(" ");
+}
 
 export function Container({
   children,

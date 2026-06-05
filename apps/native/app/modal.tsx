@@ -1,34 +1,39 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Button, Surface, useThemeColor } from "heroui-native";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { Container } from "@/components/container";
 
 function Modal() {
-  const accentForegroundColor = useThemeColor("accent-foreground");
-
   function handleClose() {
     router.back();
   }
 
   return (
-    <Container>
-      <View className="flex-1 justify-center items-center p-4">
-        <Surface variant="secondary" className="p-5 w-full max-w-sm rounded-lg">
+    <Container className="bg-background">
+      <View className="flex-1 items-center justify-center p-6">
+        <View className="w-full max-w-sm rounded-3xl border border-border bg-card p-6">
           <View className="items-center">
-            <View className="w-12 h-12 bg-accent rounded-lg items-center justify-center mb-3">
-              <Ionicons name="checkmark" size={24} color={accentForegroundColor} />
+            <View className="mb-4 h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft">
+              <Ionicons name="checkmark" size={28} color="#E5341A" />
             </View>
-            <Text className="text-foreground font-medium text-lg mb-1">Modal Screen</Text>
-            <Text className="text-muted text-sm text-center mb-4">
+
+            <Text className="mb-2 text-xl font-bold text-card-foreground">
+              Modal Screen
+            </Text>
+
+            <Text className="mb-6 text-center text-muted-foreground">
               This is an example modal screen for dialogs and confirmations.
             </Text>
           </View>
-          <Button onPress={handleClose} className="w-full" size="sm">
-            <Button.Label>Close</Button.Label>
-          </Button>
-        </Surface>
+
+          <Pressable
+            onPress={handleClose}
+            className="items-center rounded-2xl bg-brand p-4 active:opacity-80"
+          >
+            <Text className="font-semibold text-white">Close</Text>
+          </Pressable>
+        </View>
       </View>
     </Container>
   );

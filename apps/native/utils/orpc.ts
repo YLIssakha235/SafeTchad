@@ -1,13 +1,25 @@
 import type { AppRouterClient } from "@my-better-t-app/api/routers/index";
-
 import { env } from "@my-better-t-app/env/native";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { Platform } from "react-native";
-
 import { authClient } from "@/lib/auth-client";
+
+function getServerUrl() {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:3001`;
+  }
+
+  return env.EXPO_PUBLIC_SERVER_URL;
+}
+
+const SERVER_URL = getServerUrl();
+
+if (!SERVER_URL) {
+  throw new Error("EXPO_PUBLIC_SERVER_URL is missing");
+}
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -18,7 +30,7 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
-  url: `${env.EXPO_PUBLIC_SERVER_URL}/api/rpc`,
+  url: `${SERVER_URL}/api/rpc`,
   fetch:
     Platform.OS !== "web"
       ? undefined
@@ -32,15 +44,17 @@ export const link = new RPCLink({
     if (Platform.OS === "web") {
       return {};
     }
+
     const headers = new Map<string, string>();
     const cookies = authClient.getCookie();
+
     if (cookies) {
       headers.set("Cookie", cookies);
     }
+
     return Object.fromEntries(headers);
   },
 });
 
 export const client: AppRouterClient = createORPCClient(link);
-
 export const orpc = createTanstackQueryUtils(client);

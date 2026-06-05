@@ -1,5 +1,59 @@
 @import "tailwindcss";
 @import "uniwind";
-@import "heroui-native/styles";
 
-@source './node_modules/heroui-native/lib';
+@source "./app/**/*.{js,jsx,ts,tsx}";
+@source "./components/**/*.{js,jsx,ts,tsx}";
+@source "./contexts/**/*.{js,jsx,ts,tsx}";
+@source "./lib/**/*.{js,jsx,ts,tsx}";
+@source "./utils/**/*.{js,jsx,ts,tsx}";
+@source "../../packages/**/*.{js,jsx,ts,tsx}";
+
+:root {
+  --background: #fbfaf6;
+  --foreground: #1b1b22;
+
+  --card: #ffffff;
+  --card-foreground: #1b1b22;
+
+  --primary: #1b1b22;
+  --primary-foreground: #fbfaf6;
+
+  --muted: #efeee9;
+  --muted-foreground: #777780;
+
+  --border: #e5e2da;
+  --brand: #e5341a;
+  --brand-soft: #fff0ed;
+}
+
+.dark {
+  --background: #0d0d11;
+  --foreground: #f3f0e8;
+
+  --card: #18181f;
+  --card-foreground: #f3f0e8;
+
+  --primary: #f3f0e8;
+  --primary-foreground: #18181f;
+
+  --muted: #24242d;
+  --muted-foreground: #9a9aa3;
+
+  --border: #2d2d36;
+  --brand: #f04e35;
+  --brand-soft: #3a1f1b;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+}

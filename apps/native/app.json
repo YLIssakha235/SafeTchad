@@ -6,8 +6,8 @@
     "web": {
       "bundler": "metro"
     },
-    "name": "my-better-t-app",
-    "slug": "my-better-t-app",
+    "name": "Mobile-SafeTchad",
+    "slug": "Mobile-SafeTchad",
     "plugins": [
       "expo-font",
       "expo-router"
@@ -15,6 +15,9 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "android": {
+      "package": "com.anonymous.mybettertapp"
     }
   }
 }

@@ -1,44 +1,95 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { useThemeColor } from "heroui-native";
+
+import { useAppTheme } from "@/contexts/app-theme-context";
 
 export default function TabLayout() {
-  const themeColorForeground = useThemeColor("foreground");
-  const themeColorBackground = useThemeColor("background");
+  const { isDark } = useAppTheme();
+
+  const foreground = isDark ? "#f3f0e8" : "#1b1b22";
+  const background = isDark ? "#0d0d11" : "#fbfaf6";
+  const border = isDark ? "#2d2d36" : "#e5e2da";
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+
         headerStyle: {
-          backgroundColor: themeColorBackground,
+          backgroundColor: background,
         },
-        headerTintColor: themeColorForeground,
+
+        headerTintColor: foreground,
+
         headerTitleStyle: {
-          color: themeColorForeground,
+          color: foreground,
           fontWeight: "600",
         },
+
         tabBarStyle: {
-          backgroundColor: themeColorBackground,
+          backgroundColor: background,
+          borderTopColor: border,
         },
+
+        tabBarActiveTintColor: "#E5341A",
+        tabBarInactiveTintColor: foreground,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <Ionicons name="home" size={size} color={color} />
+          title: "Accueil",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
-        name="two"
+        name="incidents/index"
         options={{
-          title: "Explore",
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <Ionicons name="compass" size={size} color={color} />
+          title: "Incidents",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="list-outline" size={size} color={color} />
           ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="incidents/create"
+        options={{
+          title: "Signaler",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons
+              name="add-circle-outline"
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profil",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="incidents/[incidentId]"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="dashboard"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
