@@ -51,3 +51,13 @@ temp
 
  apps/web/public/
  
+
+# Expo Android generated project
+apps/native/android/
+
+# User uploaded files
+apps/web/public/uploads/
+apps/web/public/favicon.ico
+
+# Expo local files
+apps/native/.expo/
