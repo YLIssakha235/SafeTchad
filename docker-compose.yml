@@ -8,17 +8,16 @@ services:
       - "3001:3001"
     command: >
       sh -c "pnpm --filter @my-better-t-app/db db:push && pnpm --filter web dev"
-
     depends_on:
       postgres:
         condition: service_healthy
-    volumes: 
-      - ./apps/web/public/uploads:/apps/web/public/uploads
+    volumes:
+      - ./apps/web/public/uploads:/usr/src/app/apps/web/public/uploads
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/my-better-t-app
       - BETTER_AUTH_SECRET=etihbDoDbmmxzb96cdn99ZbZHEMBX6jb
-      - BETTER_AUTH_URL=http://localhost:3001
-      - CORS_ORIGIN=http://localhost:3001
+      - BETTER_AUTH_URL=http://172.20.10.2:3001
+      - CORS_ORIGIN=http://172.20.10.2:3001,http://172.20.10.2:8081,http://localhost:3001,http://localhost:8081
     restart: unless-stopped
 
   postgres:
